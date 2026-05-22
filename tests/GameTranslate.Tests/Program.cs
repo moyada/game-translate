@@ -7,6 +7,8 @@ var tests = new List<(string Name, Action Test)>
     ("default model chooses first gguf", DefaultModelChoosesFirstGguf),
     ("capture region normalize", CaptureRegionNormalize),
     ("capture region display", CaptureRegionDisplay),
+    ("image change detector unchanged", ImageChangeDetectorUnchanged),
+    ("image change detector changed", ImageChangeDetectorChanged),
     ("translation options", TranslationOptionsDefaults),
     ("prompt content", PromptContent),
     ("blank prompt", BlankPrompt)
@@ -82,6 +84,41 @@ static void CaptureRegionDisplay()
     var region = new CaptureRegion(12.4, 20.5, 300.2, 80.8);
     Assert(region.ToDisplayText() == "X=12, Y=21, W=300, H=81", region.ToDisplayText());
     Assert(default(CaptureRegion).ToDisplayText() == "未选择区域", "empty region text mismatch");
+}
+
+static void ImageChangeDetectorUnchanged()
+{
+    var pixels = CreateBgraPixels(32, 32, 40, 50, 60);
+    var first = ImageChangeDetector.CreateFingerprint(pixels, 32, 32, 32 * 4);
+    var second = ImageChangeDetector.CreateFingerprint(pixels, 32, 32, 32 * 4);
+
+    Assert(ImageChangeDetector.HasMeaningfulChange(null, first), "first frame should be treated as changed");
+    Assert(!ImageChangeDetector.HasMeaningfulChange(first, second), "same frame should not be treated as changed");
+}
+
+static void ImageChangeDetectorChanged()
+{
+    var dark = CreateBgraPixels(32, 32, 20, 20, 20);
+    var bright = CreateBgraPixels(32, 32, 220, 220, 220);
+    var first = ImageChangeDetector.CreateFingerprint(dark, 32, 32, 32 * 4);
+    var second = ImageChangeDetector.CreateFingerprint(bright, 32, 32, 32 * 4);
+
+    Assert(ImageChangeDetector.HasMeaningfulChange(first, second), "different frame should be treated as changed");
+}
+
+static byte[] CreateBgraPixels(int width, int height, byte blue, byte green, byte red)
+{
+    var stride = width * 4;
+    var pixels = new byte[stride * height];
+    for (var offset = 0; offset < pixels.Length; offset += 4)
+    {
+        pixels[offset] = blue;
+        pixels[offset + 1] = green;
+        pixels[offset + 2] = red;
+        pixels[offset + 3] = 255;
+    }
+
+    return pixels;
 }
 
 static void PromptContent()

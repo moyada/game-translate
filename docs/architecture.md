@@ -20,7 +20,7 @@
 
 ## Current Build
 
-The current implementation completes the local model loading, manual text translation path, and draggable region selection. Screen capture, OCR, and 200 ms change detection are the next modules to add.
+The current implementation completes the local model loading, manual text translation path, draggable region selection, selected-region screenshot capture, and 200 ms image change detection. OCR is the next module to add.
 
 ## Model Placement
 
