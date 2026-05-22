@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.vscode/
+.DS_Store
+*.user
+*.suo
+*.cache
+*.log
+src/GameTranslate/Models/*.gguf
+publish/
