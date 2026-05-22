@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using LLama;
 using LLama.Common;
@@ -36,7 +37,7 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
         {
             DisposeModel();
 
-            NativeLibraryConfig.Instance
+            NativeLibraryConfig.All
                 .WithCuda(true)
                 .WithAutoFallback(false);
 
@@ -121,4 +122,3 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
         _gate.Dispose();
     }
 }
-
