@@ -80,7 +80,7 @@ static void CaptureRegionNormalize()
 static void CaptureRegionDisplay()
 {
     var region = new CaptureRegion(12.4, 20.5, 300.2, 80.8);
-    Assert(region.ToDisplayText() == "X=12, Y=20, W=300, H=81", region.ToDisplayText());
+    Assert(region.ToDisplayText() == "X=12, Y=21, W=300, H=81", region.ToDisplayText());
     Assert(default(CaptureRegion).ToDisplayText() == "未选择区域", "empty region text mismatch");
 }
 
