@@ -59,15 +59,25 @@
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
       <TextBox Grid.Column="0"
                Text="{Binding ModelPath, UpdateSourceTrigger=PropertyChanged}"
                ToolTip="GGUF 模型路径" />
       <Button Grid.Column="1"
               Margin="12,0,0,0"
+              Content="选择区域"
+              Click="SelectRegion_Click" />
+      <Button Grid.Column="2"
+              Margin="12,0,0,0"
               Content="加载模型"
               Command="{Binding LoadModelCommand}" />
     </Grid>
+
+    <TextBlock Grid.Row="1"
+               Margin="10,42,0,0"
+               Foreground="{StaticResource MutedTextBrush}"
+               Text="{Binding CaptureRegionText}" />
 
     <Grid Grid.Row="2">
       <Grid.ColumnDefinitions>
@@ -112,7 +122,6 @@
     <TextBlock Grid.Row="3"
                Margin="0,14,0,0"
                Foreground="{StaticResource MutedTextBrush}"
-               Text="第一版先完成本地 CUDA 模型加载和手动输入翻译链路；窗口选择、拖动框截图、OCR、200ms 轮询会接到同一套服务层。" />
+               Text="第一版不选择目标窗口，直接使用全屏透明选择框确定聊天区域；截图、OCR、200ms 轮询会接到同一套区域数据。" />
   </Grid>
 </Window>
-

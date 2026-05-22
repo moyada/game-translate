@@ -1,9 +1,12 @@
 using GameTranslate.Services;
+using GameTranslate.Models;
 
 var tests = new List<(string Name, Action Test)>
 {
     ("default model fallback path", DefaultModelFallbackPath),
     ("default model chooses first gguf", DefaultModelChoosesFirstGguf),
+    ("capture region normalize", CaptureRegionNormalize),
+    ("capture region display", CaptureRegionDisplay),
     ("translation options", TranslationOptionsDefaults),
     ("prompt content", PromptContent),
     ("blank prompt", BlankPrompt)
@@ -63,6 +66,22 @@ static void TranslationOptionsDefaults()
     Assert(options.GpuLayerCount == 999, "GpuLayerCount mismatch");
     Assert(options.BatchSize == 256, "BatchSize mismatch");
     Assert(options.MaxTokens == 512, "MaxTokens mismatch");
+}
+
+static void CaptureRegionNormalize()
+{
+    var region = CaptureRegion.Normalize(100, 90, -30, -20);
+    Assert(region.X == 70, "X mismatch");
+    Assert(region.Y == 70, "Y mismatch");
+    Assert(region.Width == 30, "Width mismatch");
+    Assert(region.Height == 20, "Height mismatch");
+}
+
+static void CaptureRegionDisplay()
+{
+    var region = new CaptureRegion(12.4, 20.5, 300.2, 80.8);
+    Assert(region.ToDisplayText() == "X=12, Y=20, W=300, H=81", region.ToDisplayText());
+    Assert(default(CaptureRegion).ToDisplayText() == "未选择区域", "empty region text mismatch");
 }
 
 static void PromptContent()

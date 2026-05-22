@@ -74,7 +74,8 @@ The current build is the first integration slice:
 
 - Loads the local GGUF model through LLamaSharp.
 - Forces CUDA backend selection and disables native backend fallback.
+- Uses a full-screen draggable selection box instead of target-window selection.
 - Provides manual English input and Chinese translation output in WPF.
 - Shows model load failures directly in the UI.
 
-The next implementation slice should add target-window selection, draggable capture rectangle, screen capture, OCR, and 200 ms change detection.
+The next implementation slice should add screen capture, OCR, and 200 ms change detection.

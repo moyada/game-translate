@@ -1,4 +1,5 @@
 using GameTranslate.Services;
+using GameTranslate.Models;
 
 namespace GameTranslate.ViewModels;
 
@@ -11,6 +12,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _sourceText = "hello, team. the boss is spawning near the bridge.";
     private string _translatedText = string.Empty;
     private string _statusText = "模型未加载";
+    private CaptureRegion _captureRegion;
     private bool _isModelLoaded;
 
     public MainViewModel()
@@ -56,9 +58,29 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _statusText, value);
     }
 
+    public CaptureRegion CaptureRegion
+    {
+        get => _captureRegion;
+        private set
+        {
+            if (SetProperty(ref _captureRegion, value))
+            {
+                OnPropertyChanged(nameof(CaptureRegionText));
+            }
+        }
+    }
+
+    public string CaptureRegionText => CaptureRegion.ToDisplayText();
+
     public RelayCommand LoadModelCommand => _loadModelCommand;
 
     public RelayCommand TranslateCommand => _translateCommand;
+
+    public void SetCaptureRegion(CaptureRegion captureRegion)
+    {
+        CaptureRegion = captureRegion;
+        StatusText = "已选择截图区域";
+    }
 
     private async Task LoadModelAsync()
     {
@@ -105,4 +127,3 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 }
-

@@ -11,7 +11,7 @@
 
 ## Pipeline
 
-1. User selects a target window and places a draggable capture rectangle over the chat area.
+1. User places a draggable capture rectangle over the chat area.
 2. The app captures the selected region every 200 ms.
 3. If the image or OCR text is unchanged, the app waits.
 4. When content changes, OCR extracts source text.
@@ -20,7 +20,7 @@
 
 ## Current Build
 
-The current implementation completes the local model loading and manual text translation path. Window capture, draggable region selection, OCR, and 200 ms change detection are the next modules to add.
+The current implementation completes the local model loading, manual text translation path, and draggable region selection. Screen capture, OCR, and 200 ms change detection are the next modules to add.
 
 ## Model Placement
 
@@ -33,4 +33,3 @@ src/GameTranslate/Models/Qwen3-1.7B-UD-Q4_K_XL.gguf
 At runtime, the app chooses the first `*.gguf` file in the `Models` folder by file name. If none exists, it falls back to `Qwen3-1.7B-UD-Q4_K_XL.gguf`.
 
 The file is intentionally ignored by Git.
-
