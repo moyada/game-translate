@@ -9,6 +9,7 @@ Windows 10 / Windows 11 x64 WPF app for translating selected game chat text with
 - Model: `unsloth/Qwen3-1.7B-GGUF:UD-Q4_K_XL`
 - Runtime: LLamaSharp in-process inference
 - Backend: `LLamaSharp.Backend.Cuda12.Windows`
+- CUDA runtime libraries: `NtvLibs.cuda12.cublas.runtime.win-x64`
 - CPU fallback: not supported in v1
 
 ## Requirements
@@ -72,7 +73,7 @@ Check the output folder:
 dir src\GameTranslate\bin\x64\Release\net8.0-windows10.0.19041.0 -Recurse -Filter *.dll | findstr /i "llama ggml cuda"
 ```
 
-Expected files include `runtimes\win-x64\native\cuda12\llama.dll`, `ggml.dll`, `ggml-base.dll`, and `ggml-cuda.dll`. The app explicitly loads the CUDA12 `llama.dll`; CPU fallback is not enabled.
+Expected files include `runtimes\win-x64\native\cuda12\llama.dll`, `ggml.dll`, `ggml-base.dll`, `ggml-cuda.dll`, `cudart64_12.dll`, `cublas64_12.dll`, and `cublasLt64_12.dll`. The app explicitly loads the CUDA12 `llama.dll`; CPU fallback is not enabled.
 
 ## Test
 

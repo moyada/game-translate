@@ -6,6 +6,8 @@ public static class CudaNativeLibraryResolver
 {
     public static string GetCudaLlamaLibraryPath(string appBaseDirectory)
     {
+        WindowsNativeLibrarySearchPath.AddNativeDllDirectories(appBaseDirectory);
+
         var path = Path.Combine(
             appBaseDirectory,
             "runtimes",
@@ -22,4 +24,3 @@ public static class CudaNativeLibraryResolver
         return path;
     }
 }
-
