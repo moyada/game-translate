@@ -26,6 +26,7 @@ public static class TranslationPromptBuilder
         builder.AppendLine("Only output the Chinese translation.");
         builder.AppendLine("Do not explain. Do not add notes. Do not repeat the English source.");
         builder.AppendLine("If OCR text contains a player name before a colon, semicolon, single separator space, or @mention prefix, ignore the name and translate only the message.");
+        builder.AppendLine("If the input has multiple lines, output the same number of translated lines in the same order.");
         builder.AppendLine("Preserve numbers, channel names, short commands, and player names when they appear inside the message body.");
         builder.AppendLine("Use official or common MapleStory Chinese terms when a glossary term applies.");
         if (glossaryTerms.Count > 0)

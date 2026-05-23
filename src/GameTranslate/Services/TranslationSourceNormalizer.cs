@@ -8,7 +8,7 @@ public static partial class TranslationSourceNormalizer
     {
         if (string.IsNullOrWhiteSpace(sourceText))
         {
-            return new TranslationSourceContext(string.Empty, null);
+            return new TranslationSourceContext(string.Empty, []);
         }
 
         var lines = sourceText
@@ -19,12 +19,12 @@ public static partial class TranslationSourceNormalizer
 
         if (lines.Length == 0)
         {
-            return new TranslationSourceContext(string.Empty, null);
+            return new TranslationSourceContext(string.Empty, []);
         }
 
         var text = string.Join(Environment.NewLine, lines.Select(line => line.TranslatableText));
-        var prefix = lines.Length == 1 ? lines[0].SpeakerPrefix : null;
-        return new TranslationSourceContext(text, prefix);
+        var prefixes = lines.Select(line => line.SpeakerPrefix).ToArray();
+        return new TranslationSourceContext(text, prefixes);
     }
 
     public static string ExtractTranslatableText(string sourceText)
@@ -40,21 +40,31 @@ public static partial class TranslationSourceNormalizer
         }
 
         var context = Parse(sourceText);
-        if (string.IsNullOrWhiteSpace(context.SpeakerPrefix))
+        var translatedLines = translatedText
+            .Trim()
+            .Split(["\r\n", "\n"], StringSplitOptions.None);
+
+        if (context.SpeakerPrefixes.Length == 0
+            || context.SpeakerPrefixes.All(string.IsNullOrWhiteSpace)
+            || context.SpeakerPrefixes.Length != translatedLines.Length)
         {
             return translatedText.Trim();
         }
 
-        return $"{context.SpeakerPrefix}：{translatedText.Trim()}";
+        var restoredLines = translatedLines
+            .Select((line, index) => string.IsNullOrWhiteSpace(context.SpeakerPrefixes[index])
+                ? line.Trim()
+                : $"{context.SpeakerPrefixes[index]}：{line.Trim()}");
+        return string.Join(Environment.NewLine, restoredLines);
     }
 
-    private static TranslationSourceContext ParseLine(string line)
+    private static TranslationSourceLineContext ParseLine(string line)
     {
         var trimmed = line.Trim();
         var explicitMatch = ExplicitSpeakerPrefixRegex().Match(trimmed);
         if (explicitMatch.Success)
         {
-            return new TranslationSourceContext(
+            return TranslationSourceLineContext.WithSpeaker(
                 explicitMatch.Groups["message"].Value.Trim(),
                 explicitMatch.Groups["speaker"].Value.Trim());
         }
@@ -62,12 +72,12 @@ public static partial class TranslationSourceNormalizer
         var spaceMatch = SpaceSpeakerPrefixRegex().Match(trimmed);
         if (spaceMatch.Success && IsLikelySpeakerPrefix(spaceMatch.Groups["speaker"].Value))
         {
-            return new TranslationSourceContext(
+            return TranslationSourceLineContext.WithSpeaker(
                 spaceMatch.Groups["message"].Value.Trim(),
                 spaceMatch.Groups["speaker"].Value.Trim());
         }
 
-        return new TranslationSourceContext(trimmed, null);
+        return new TranslationSourceLineContext(trimmed, null);
     }
 
     private static bool IsLikelySpeakerPrefix(string speaker)
@@ -111,4 +121,15 @@ public static partial class TranslationSourceNormalizer
     private static partial Regex SpaceSpeakerPrefixRegex();
 }
 
-public sealed record TranslationSourceContext(string TranslatableText, string? SpeakerPrefix);
+public sealed record TranslationSourceContext(string TranslatableText, string?[] SpeakerPrefixes)
+{
+    public string? SpeakerPrefix => SpeakerPrefixes.Length == 1 ? SpeakerPrefixes[0] : null;
+}
+
+internal sealed record TranslationSourceLineContext(string TranslatableText, string? SpeakerPrefix)
+{
+    public static TranslationSourceLineContext WithSpeaker(string translatableText, string speakerPrefix)
+    {
+        return new TranslationSourceLineContext(translatableText, speakerPrefix);
+    }
+}

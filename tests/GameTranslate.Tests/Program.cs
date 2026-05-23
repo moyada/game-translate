@@ -39,6 +39,7 @@ var tests = new List<(string Name, Action Test)>
     ("chat speaker prefix restored", ChatSpeakerPrefixRestored),
     ("chat speaker prefix ocr separators", ChatSpeakerPrefixOcrSeparators),
     ("chat at mention prefix preserved", ChatAtMentionPrefixPreserved),
+    ("maplestory multi line speaker prefixes", MapleStoryMultiLineSpeakerPrefixes),
     ("maplestory glossary prompt content", MapleStoryGlossaryPromptContent),
     ("maplestory glossary file persists entries", MapleStoryGlossaryFilePersistsEntries),
     ("translation output removes think block", TranslationOutputRemovesThinkBlock),
@@ -391,6 +392,7 @@ static void QwenChatPromptContent()
     Assert(prompt.Contains("<|im_start|>assistant", StringComparison.Ordinal), "missing assistant header");
     Assert(prompt.Contains("/no_think", StringComparison.Ordinal), "missing /no_think");
     Assert(prompt.Contains("Only output the Chinese translation.", StringComparison.Ordinal), "missing output rule");
+    Assert(prompt.Contains("same number of translated lines", StringComparison.Ordinal), "missing multi-line output rule");
     Assert(prompt.Contains("push mid now", StringComparison.Ordinal), "missing source text");
     Assert(prompt.TrimEnd().EndsWith("<|im_start|>assistant", StringComparison.Ordinal), "prompt should end at assistant turn");
 }
@@ -446,6 +448,43 @@ static void ChatAtMentionPrefixPreserved()
 
     var text = TranslationSourceNormalizer.ApplySpeakerPrefix("@Steam ew you have cooties", "恶心，离我远点");
     Assert(text == "@Steam：恶心，离我远点", text);
+}
+
+static void MapleStoryMultiLineSpeakerPrefixes()
+{
+    var source = string.Join(Environment.NewLine, new[]
+    {
+        "LordLemon : pls nerf mage",
+        "Tako lol",
+        "Willow TRUE",
+        "Tako ILL MAKE IT MY GOAL",
+        "LordLemon TY",
+        "Tako maybe",
+        "Tako B)",
+        "Ziren THERE better not be another ***kng stage"
+    });
+
+    var parsed = TranslationSourceNormalizer.Parse(source);
+    Assert(parsed.TranslatableText.Contains("pls nerf mage", StringComparison.Ordinal), parsed.TranslatableText);
+    Assert(!parsed.TranslatableText.Contains("LordLemon", StringComparison.Ordinal), parsed.TranslatableText);
+    Assert(!parsed.TranslatableText.Contains("Tako", StringComparison.Ordinal), parsed.TranslatableText);
+
+    var restored = TranslationSourceNormalizer.ApplySpeakerPrefix(source, string.Join(Environment.NewLine, new[]
+    {
+        "请削弱法师",
+        "哈哈",
+        "真的",
+        "我会把它当成目标",
+        "谢谢",
+        "也许",
+        "B)",
+        "最好不要再来一个该死的关卡"
+    }));
+
+    Assert(restored.Contains("LordLemon：请削弱法师", StringComparison.Ordinal), restored);
+    Assert(restored.Contains("Tako：哈哈", StringComparison.Ordinal), restored);
+    Assert(restored.Contains("Willow：真的", StringComparison.Ordinal), restored);
+    Assert(restored.Contains("Ziren：最好不要再来一个该死的关卡", StringComparison.Ordinal), restored);
 }
 
 static void MapleStoryGlossaryPromptContent()
