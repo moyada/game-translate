@@ -36,7 +36,12 @@ public sealed class WindowsOcrService : IOcrService
             throw new InvalidOperationException($"截图区域过大，Windows OCR 单边最大支持 {OcrEngine.MaxImageDimension} 像素。");
         }
 
-        var buffer = CryptographicBuffer.CreateFromByteArray(frame.BgraPixels);
+        var preprocessedPixels = OcrImagePreprocessor.CreateHighContrastBgra(
+            frame.BgraPixels,
+            frame.Width,
+            frame.Height,
+            frame.Stride);
+        var buffer = CryptographicBuffer.CreateFromByteArray(preprocessedPixels);
         using var bitmap = SoftwareBitmap.CreateCopyFromBuffer(
             buffer,
             BitmapPixelFormat.Bgra8,
@@ -48,4 +53,3 @@ public sealed class WindowsOcrService : IOcrService
         return OcrTextNormalizer.NormalizeLines(result.Lines.Select(line => line.Text));
     }
 }
-

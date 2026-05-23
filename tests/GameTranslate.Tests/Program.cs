@@ -11,6 +11,8 @@ var tests = new List<(string Name, Action Test)>
     ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
+    ("ocr preprocessor detects colored text", OcrPreprocessorDetectsColoredText),
+    ("ocr preprocessor converts colored text to black", OcrPreprocessorConvertsColoredTextToBlack),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
@@ -149,6 +151,30 @@ static byte[] CreateBgraPixels(int width, int height, byte blue, byte green, byt
     }
 
     return pixels;
+}
+
+static void OcrPreprocessorDetectsColoredText()
+{
+    Assert(OcrImagePreprocessor.IsLikelyTextPixel(210, 210, 20), "yellow notice text should be treated as text");
+    Assert(OcrImagePreprocessor.IsLikelyTextPixel(165, 35, 130), "magenta chat text should be treated as text");
+    Assert(!OcrImagePreprocessor.IsLikelyTextPixel(130, 130, 130), "gray chat background should not be treated as text");
+}
+
+static void OcrPreprocessorConvertsColoredTextToBlack()
+{
+    var pixels = CreateBgraPixels(3, 3, 130, 130, 130);
+    var centerOffset = (1 * 3 + 1) * 4;
+    pixels[centerOffset] = 20;
+    pixels[centerOffset + 1] = 210;
+    pixels[centerOffset + 2] = 210;
+    pixels[centerOffset + 3] = 255;
+
+    var processed = OcrImagePreprocessor.CreateHighContrastBgra(pixels, 3, 3, 3 * 4);
+
+    Assert(processed[centerOffset] == 0, "text blue channel should be black");
+    Assert(processed[centerOffset + 1] == 0, "text green channel should be black");
+    Assert(processed[centerOffset + 2] == 0, "text red channel should be black");
+    Assert(processed[0] == 255, "background should be white");
 }
 
 static void OcrTextNormalizerTrimsAndDropsBlankLines()
