@@ -8,7 +8,7 @@
 - Model loading: lazy-loaded on first manual or automatic translation.
 - Runtime: LLamaSharp in-process inference.
 - Backend: `LLamaSharp.Backend.Cuda12.Windows`.
-- OCR: PaddleSharp/PaddleOCR only. It uses the original color capture without color preprocessing.
+- OCR: PaddleSharp/PaddleOCR only. It uses the original color capture, then applies upscaling plus light contrast enhancement before recognition.
 - Glossary: persisted MapleStory terms in `Resources/Glossary/maplestory-glossary.json`, seeded from MapleStory Wiki and mxdzlk pages.
 - CPU fallback: not supported.
 
@@ -28,7 +28,7 @@
 1. User clicks translate after a capture rectangle exists.
 2. The app captures the selected region once.
 3. PaddleOCR extracts source text once.
-4. `TranslationSourceNormalizer` removes player-name prefixes such as `Steam :`, OCR-damaged `Steam ;`, `Steam `, and `@Steam `.
+4. `TranslationSourceNormalizer` removes player-name prefixes only when a real colon is present, such as `Steam :`, `Steam：`, or `@Steam :`.
 5. `TranslationPromptBuilder` injects only glossary terms that match the current OCR text.
 6. `CudaLlamaTranslationService` lazy-loads the local GGUF model if needed, then translates the OCR text once.
 7. The displayed result is cleaned to remove Qwen thinking blocks such as `<think>...</think>` and chat stop tokens.
@@ -42,6 +42,8 @@ The selection overlay owns the enabled state of monitoring and translation. With
 Glossary entries are stored as project data, not hard-coded in the prompt. The runtime keeps prompts small by selecting only entries whose English term or alias appears in the OCR text. The initial seed contains monsters, maps, NPCs, jobs, and common chat terms gathered from the specified MapleStory reference pages.
 
 When a single chat line has a detected player prefix, the prefix is kept out of the LLM prompt and restored after generation as `用户名：译文`. This avoids translating names while still showing who spoke.
+
+Username detection deliberately requires a real colon. Semicolon-like OCR output or a single space after a name is left as normal message text; the OCR preprocessing path is responsible for improving colon visibility instead of guessing separators.
 
 ## Current Build
 

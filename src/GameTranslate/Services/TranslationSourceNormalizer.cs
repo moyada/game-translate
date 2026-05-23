@@ -69,56 +69,11 @@ public static partial class TranslationSourceNormalizer
                 explicitMatch.Groups["speaker"].Value.Trim());
         }
 
-        var spaceMatch = SpaceSpeakerPrefixRegex().Match(trimmed);
-        if (spaceMatch.Success && IsLikelySpeakerPrefix(spaceMatch.Groups["speaker"].Value))
-        {
-            return TranslationSourceLineContext.WithSpeaker(
-                spaceMatch.Groups["message"].Value.Trim(),
-                spaceMatch.Groups["speaker"].Value.Trim());
-        }
-
         return new TranslationSourceLineContext(trimmed, null);
     }
 
-    private static bool IsLikelySpeakerPrefix(string speaker)
-    {
-        if (speaker.StartsWith('@'))
-        {
-            return true;
-        }
-
-        return !CommonSentenceStarts.Contains(speaker);
-    }
-
-    private static readonly HashSet<string> CommonSentenceStarts = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Hello",
-        "Hi",
-        "Hey",
-        "Go",
-        "Kill",
-        "Come",
-        "Need",
-        "Can",
-        "Where",
-        "When",
-        "Why",
-        "What",
-        "Trade",
-        "Buy",
-        "Sell",
-        "Party",
-        "Boss",
-        "Help",
-        "Anyone",
-        "Looking"
-    };
-
-    [GeneratedRegex(@"^\s*(?<speaker>@?[A-Za-z0-9][A-Za-z0-9_\-.]{1,31})\s*[:：;；]\s*(?<message>.+)$")]
+    [GeneratedRegex(@"^\s*(?<speaker>@?[A-Za-z0-9][A-Za-z0-9_\-.]{1,31})\s*[:：]\s*(?<message>.+)$")]
     private static partial Regex ExplicitSpeakerPrefixRegex();
-
-    [GeneratedRegex(@"^\s*(?<speaker>@[A-Za-z0-9][A-Za-z0-9_\-.]{1,31}|[A-Z][A-Za-z0-9_\-.]{2,31})\s(?<message>.+)$")]
-    private static partial Regex SpaceSpeakerPrefixRegex();
 }
 
 public sealed record TranslationSourceContext(string TranslatableText, string?[] SpeakerPrefixes)

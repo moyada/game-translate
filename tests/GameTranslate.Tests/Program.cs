@@ -25,6 +25,7 @@ var tests = new List<(string Name, Action Test)>
     ("image change detector changed", ImageChangeDetectorChanged),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
+    ("paddle ocr light contrast enhancement", PaddleOcrLightContrastEnhancement),
     ("paddle ocr recreates engine after failure", PaddleOcrRecreatesEngineAfterFailure),
     ("paddle ocr recreates engine after recognition", PaddleOcrRecreatesEngineAfterRecognition),
     ("paddle ocr failure message supports manual retry", PaddleOcrFailureMessageSupportsManualRetry),
@@ -37,9 +38,9 @@ var tests = new List<(string Name, Action Test)>
     ("simple translation prompt", SimpleTranslationPrompt),
     ("chat speaker prefix stripped", ChatSpeakerPrefixStripped),
     ("chat speaker prefix restored", ChatSpeakerPrefixRestored),
-    ("chat speaker prefix ocr separators", ChatSpeakerPrefixOcrSeparators),
+    ("chat speaker prefix only colon", ChatSpeakerPrefixOnlyColon),
     ("chat at mention prefix preserved", ChatAtMentionPrefixPreserved),
-    ("maplestory multi line speaker prefixes", MapleStoryMultiLineSpeakerPrefixes),
+    ("maplestory colon speaker prefixes", MapleStoryColonSpeakerPrefixes),
     ("maplestory glossary prompt content", MapleStoryGlossaryPromptContent),
     ("maplestory glossary file persists entries", MapleStoryGlossaryFilePersistsEntries),
     ("translation output removes think block", TranslationOutputRemovesThinkBlock),
@@ -312,6 +313,11 @@ static void PaddleOcrUpscaleFactor()
     Assert(PaddleSharpOcrService.InputScaleFactor == 3.0, "PaddleOCR should upscale small game text");
 }
 
+static void PaddleOcrLightContrastEnhancement()
+{
+    Assert(PaddleSharpOcrService.UsesLightContrastEnhancement, "PaddleOCR should enhance low-contrast game chat text");
+}
+
 static void PaddleOcrRecreatesEngineAfterFailure()
 {
     Assert(PaddleSharpOcrService.RecreatesEngineAfterFailure, "PaddleOCR engine should reset after native predictor failures");
@@ -421,15 +427,15 @@ static void ChatSpeakerPrefixRestored()
     Assert(text == "Steam：恶心，离我远点", text);
 }
 
-static void ChatSpeakerPrefixOcrSeparators()
+static void ChatSpeakerPrefixOnlyColon()
 {
     var semicolon = TranslationSourceNormalizer.Parse("Steam ; ew you have cooties");
-    Assert(semicolon.SpeakerPrefix == "Steam", semicolon.SpeakerPrefix ?? "missing speaker");
-    Assert(semicolon.TranslatableText == "ew you have cooties", semicolon.TranslatableText);
+    Assert(semicolon.SpeakerPrefix is null, semicolon.SpeakerPrefix ?? "unexpected speaker");
+    Assert(semicolon.TranslatableText == "Steam ; ew you have cooties", semicolon.TranslatableText);
 
     var space = TranslationSourceNormalizer.Parse("Steam ew you have cooties");
-    Assert(space.SpeakerPrefix == "Steam", space.SpeakerPrefix ?? "missing speaker");
-    Assert(space.TranslatableText == "ew you have cooties", space.TranslatableText);
+    Assert(space.SpeakerPrefix is null, space.SpeakerPrefix ?? "unexpected speaker");
+    Assert(space.TranslatableText == "Steam ew you have cooties", space.TranslatableText);
 
     var normalSentence = TranslationSourceNormalizer.Parse("go kill Slime");
     Assert(normalSentence.SpeakerPrefix is null, normalSentence.SpeakerPrefix ?? "unexpected speaker");
@@ -442,26 +448,30 @@ static void ChatSpeakerPrefixOcrSeparators()
 
 static void ChatAtMentionPrefixPreserved()
 {
-    var parsed = TranslationSourceNormalizer.Parse("@Steam ew you have cooties");
+    var parsed = TranslationSourceNormalizer.Parse("@Steam : ew you have cooties");
     Assert(parsed.SpeakerPrefix == "@Steam", parsed.SpeakerPrefix ?? "missing speaker");
     Assert(parsed.TranslatableText == "ew you have cooties", parsed.TranslatableText);
 
-    var text = TranslationSourceNormalizer.ApplySpeakerPrefix("@Steam ew you have cooties", "恶心，离我远点");
+    var text = TranslationSourceNormalizer.ApplySpeakerPrefix("@Steam : ew you have cooties", "恶心，离我远点");
     Assert(text == "@Steam：恶心，离我远点", text);
+
+    var missingColon = TranslationSourceNormalizer.Parse("@Steam ew you have cooties");
+    Assert(missingColon.SpeakerPrefix is null, missingColon.SpeakerPrefix ?? "unexpected speaker");
+    Assert(missingColon.TranslatableText == "@Steam ew you have cooties", missingColon.TranslatableText);
 }
 
-static void MapleStoryMultiLineSpeakerPrefixes()
+static void MapleStoryColonSpeakerPrefixes()
 {
     var source = string.Join(Environment.NewLine, new[]
     {
         "LordLemon : pls nerf mage",
-        "Tako lol",
-        "Willow TRUE",
-        "Tako ILL MAKE IT MY GOAL",
-        "LordLemon TY",
-        "Tako maybe",
-        "Tako B)",
-        "Ziren THERE better not be another ***kng stage"
+        "Tako : lol",
+        "Willow : TRUE",
+        "Tako : ILL MAKE IT MY GOAL",
+        "LordLemon : TY",
+        "Tako : maybe",
+        "Tako : B)",
+        "Ziren : THERE better not be another ***kng stage"
     });
 
     var parsed = TranslationSourceNormalizer.Parse(source);

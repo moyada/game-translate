@@ -14,6 +14,8 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 
     public const double InputScaleFactor = 3.0;
 
+    public const bool UsesLightContrastEnhancement = true;
+
     public const bool RecreatesEngineAfterFailure = true;
 
     public const bool RecreatesEngineAfterRecognition = true;
@@ -85,13 +87,15 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         using var bgra = CreateBgraMat(frame);
         using var bgr = new Mat();
         using var enlarged = new Mat();
+        using var enhanced = new Mat();
         Cv2.CvtColor(bgra, bgr, ColorConversionCodes.BGRA2BGR);
         Cv2.Resize(bgr, enlarged, new CvSize(), InputScaleFactor, InputScaleFactor, InterpolationFlags.Cubic);
+        EnhanceGameChatText(enlarged, enhanced);
 
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var result = GetOrCreateOcr().Run(enlarged);
+            var result = GetOrCreateOcr().Run(enhanced);
             cancellationToken.ThrowIfCancellationRequested();
             return OcrTextNormalizer.NormalizeLines(SplitLines(result.Text));
         }
@@ -133,6 +137,34 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         }
 
         return mat;
+    }
+
+    private static void EnhanceGameChatText(Mat input, Mat output)
+    {
+        using var lab = new Mat();
+        using var enhancedLab = new Mat();
+        using var sharpened = new Mat();
+        using var blurred = new Mat();
+        Cv2.CvtColor(input, lab, ColorConversionCodes.BGR2Lab);
+
+        var channels = Cv2.Split(lab);
+        try
+        {
+            using var clahe = Cv2.CreateCLAHE(clipLimit: 2.0, tileGridSize: new CvSize(8, 8));
+            clahe.Apply(channels[0], channels[0]);
+            Cv2.Merge(channels, enhancedLab);
+            Cv2.CvtColor(enhancedLab, sharpened, ColorConversionCodes.Lab2BGR);
+        }
+        finally
+        {
+            foreach (var channel in channels)
+            {
+                channel.Dispose();
+            }
+        }
+
+        Cv2.GaussianBlur(sharpened, blurred, new CvSize(0, 0), 1.0);
+        Cv2.AddWeighted(sharpened, 1.35, blurred, -0.35, 0, output);
     }
 
     private static IEnumerable<string> SplitLines(string text)

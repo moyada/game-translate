@@ -130,14 +130,15 @@ The current build is the first integration slice:
 - Mouse operations outside the selection box pass through to the game/app below, so the topmost overlay does not block normal screen interaction.
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
-- Uses PaddleOCR on the original color capture without color preprocessing, then upscales it before recognition.
+- Uses PaddleOCR on the original color capture, then upscales it before recognition.
+- Applies light contrast enhancement and sharpening after upscaling to improve low-contrast punctuation such as chat-name colons.
 - Recreates the PaddleOCR engine after each recognition to avoid stale native predictor state on repeated manual translations.
 - Cancels the active monitoring session on stop and waits for any in-flight PaddleOCR run to finish before allowing a new monitoring session.
 - Shows the raw capture preview and the PaddleOCR input preview for tuning.
 - Monitoring runs a continuous loop over the selected region: capture, skip unchanged images/text, PaddleOCR, then translate changed OCR text.
 - The translate button runs a single pass over the selected region: capture once, PaddleOCR once, then translate once.
 - Writes recognized OCR text into the source text box.
-- Strips player-name prefixes such as `Steam : message`, OCR-damaged `Steam ; message`, `Steam message`, or `@Steam message` before building the LLM prompt, then restores the original name as `Steam：译文`.
+- Strips player-name prefixes only when OCR keeps a real colon, such as `Steam : message`, `Steam：message`, or `@Steam : message`, then restores the original name as `Steam：译文`. Semicolons and single spaces are not treated as username separators.
 - Loads relevant MapleStory glossary entries from `Resources/Glossary/maplestory-glossary.json` and injects only matching terms into the prompt.
 - Automatically lazy-loads the CUDA model before the first manual or monitoring translation.
 - Removes Qwen thinking blocks such as `<think>...</think>` and chat stop tokens from the displayed translation result.
