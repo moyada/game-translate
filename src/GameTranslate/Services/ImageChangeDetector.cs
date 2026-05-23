@@ -4,7 +4,7 @@ namespace GameTranslate.Services;
 
 public static class ImageChangeDetector
 {
-    public const double DefaultChangedSampleRatioThreshold = 0.10;
+    public const double DefaultChangedSampleRatioThreshold = 0.03;
     public const byte DefaultSampleDifferenceThreshold = 24;
     private const int SampleColumns = 16;
     private const int SampleRows = 16;
@@ -93,7 +93,7 @@ public static class ImageChangeDetector
             return true;
         }
 
-        return CalculateChangedSampleRatio(previous, current) > changedSampleRatioThreshold;
+        return CalculateChangedSampleRatio(previous, current) >= changedSampleRatioThreshold;
     }
 
     private static byte ToLuminance(byte red, byte green, byte blue)

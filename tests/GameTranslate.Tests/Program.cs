@@ -21,9 +21,10 @@ var tests = new List<(string Name, Action Test)>
     ("llm lazy load policy", LlmLazyLoadPolicy),
     ("single shot translation policy", SingleShotTranslationPolicy),
     ("manual translation captures ocr and translates once", ManualTranslationCapturesOcrAndTranslatesOnce),
+    ("duplicate source translation skipped", DuplicateSourceTranslationSkipped),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
-    ("image change detector ten percent threshold", ImageChangeDetectorTenPercentThreshold),
+    ("image change detector three percent threshold", ImageChangeDetectorThreePercentThreshold),
     ("monitoring force translation policy", MonitoringForceTranslationPolicy),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
@@ -270,6 +271,31 @@ static void ManualTranslationCapturesOcrAndTranslatesOnce()
     Assert(!viewModel.IsCaptureBusy, "manual translation should release capture busy state");
 }
 
+static void DuplicateSourceTranslationSkipped()
+{
+    var capture = new FakeScreenCaptureService();
+    var ocr = new FakeOcrService("hello, team");
+    var translation = new FakeTranslationService("大家好");
+    using var viewModel = new MainViewModel(translation, capture, ocr);
+
+    viewModel.SetCaptureSelection(new CaptureSelection(
+        new CaptureRegion(10, 20, 100, 50),
+        new CaptureRegion(10, 20, 100, 50),
+        1,
+        1));
+
+    viewModel.TranslateCommand.Execute(null);
+    SpinWait.SpinUntil(() => translation.TranslateCount == 1 || viewModel.StatusText == "翻译失败", TimeSpan.FromSeconds(2));
+    SpinWait.SpinUntil(() => viewModel.TranslateCommand.CanExecute(null), TimeSpan.FromSeconds(2));
+    viewModel.TranslateCommand.Execute(null);
+    SpinWait.SpinUntil(() => ocr.CallCount == 2 || viewModel.StatusText == "翻译失败", TimeSpan.FromSeconds(2));
+
+    Assert(capture.CaptureCount == 2, $"capture count {capture.CaptureCount}");
+    Assert(ocr.CallCount == 2, $"ocr count {ocr.CallCount}");
+    Assert(translation.TranslateCount == 1, $"translate count {translation.TranslateCount}");
+    Assert(viewModel.StatusText == "原文未变化，跳过翻译", viewModel.StatusText);
+}
+
 static void ImageChangeDetectorUnchanged()
 {
     var pixels = CreateBgraPixels(32, 32, 40, 50, 60);
@@ -290,16 +316,16 @@ static void ImageChangeDetectorChanged()
     Assert(ImageChangeDetector.HasMeaningfulChange(first, second), "different frame should be treated as changed");
 }
 
-static void ImageChangeDetectorTenPercentThreshold()
+static void ImageChangeDetectorThreePercentThreshold()
 {
-    Assert(ImageChangeDetector.DefaultChangedSampleRatioThreshold == 0.10, "default change threshold should be 10%");
+    Assert(ImageChangeDetector.DefaultChangedSampleRatioThreshold == 0.03, "default change threshold should be 3%");
 
     var previous = new ImageFingerprint(16, 16, Enumerable.Repeat((byte)20, 100).ToArray());
-    var ninePercent = new ImageFingerprint(16, 16, previous.Samples.Select((value, index) => index < 9 ? (byte)220 : value).ToArray());
-    var elevenPercent = new ImageFingerprint(16, 16, previous.Samples.Select((value, index) => index < 11 ? (byte)220 : value).ToArray());
+    var twoPercent = new ImageFingerprint(16, 16, previous.Samples.Select((value, index) => index < 2 ? (byte)220 : value).ToArray());
+    var threePercent = new ImageFingerprint(16, 16, previous.Samples.Select((value, index) => index < 3 ? (byte)220 : value).ToArray());
 
-    Assert(!ImageChangeDetector.HasMeaningfulChange(previous, ninePercent), "9% changed samples should wait");
-    Assert(ImageChangeDetector.HasMeaningfulChange(previous, elevenPercent), "11% changed samples should trigger OCR");
+    Assert(!ImageChangeDetector.HasMeaningfulChange(previous, twoPercent), "2% changed samples should wait");
+    Assert(ImageChangeDetector.HasMeaningfulChange(previous, threePercent), "3% changed samples should trigger OCR");
 }
 
 static void MonitoringForceTranslationPolicy()

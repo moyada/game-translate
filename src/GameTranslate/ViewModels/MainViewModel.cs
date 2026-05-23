@@ -24,6 +24,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private ImageSource? _latestOcrImage;
     private ImageFingerprint? _lastFingerprint;
     private string _lastOcrText = string.Empty;
+    private string _lastTranslatedSourceText = string.Empty;
     private int _unchangedFrameStreak;
     private int _captureCount;
     private int _changedFrameCount;
@@ -201,6 +202,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         CaptureSelection = captureSelection;
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
+        _lastTranslatedSourceText = string.Empty;
         _unchangedFrameStreak = 0;
         StatusText = "已选择截图区域";
         CaptureStatusText = "截图区域已更新";
@@ -212,6 +214,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         CaptureSelection = new CaptureSelection(default, default, 1, 1);
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
+        _lastTranslatedSourceText = string.Empty;
         _unchangedFrameStreak = 0;
         LatestCaptureImage = null;
         LatestOcrImage = null;
@@ -313,6 +316,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _monitoringCancellation = new CancellationTokenSource();
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
+        _lastTranslatedSourceText = string.Empty;
         _unchangedFrameStreak = 0;
         CaptureCount = 0;
         ChangedFrameCount = 0;
@@ -424,6 +428,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             CaptureStatusText = isMonitoringCapture ? "OCR 已更新，正在自动翻译" : "OCR 已完成，正在翻译";
             StatusText = isMonitoringCapture ? "正在自动翻译..." : "正在翻译...";
+            if (string.Equals(_lastTranslatedSourceText, ocrText, StringComparison.Ordinal))
+            {
+                StatusText = "原文未变化，跳过翻译";
+                CaptureStatusText = "OCR 原文与上次翻译相同";
+                return;
+            }
+
             if (!await EnsureModelLoadedAsync())
             {
                 CaptureStatusText = isMonitoringCapture ? "OCR 已更新，模型加载失败" : "OCR 已完成，模型加载失败";
@@ -431,6 +442,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             }
 
             TranslatedText = await _translationService.TranslateToChineseAsync(ocrText);
+            _lastTranslatedSourceText = ocrText;
             StatusText = isMonitoringCapture ? "自动翻译完成" : "翻译完成";
             CaptureStatusText = isMonitoringCapture ? "OCR 文本已自动翻译" : "单次截图 OCR 翻译完成";
         }

@@ -18,12 +18,13 @@
 
 1. User places a draggable capture rectangle over the chat area.
 2. The app captures the selected region every 200 ms.
-3. `ImageChangeDetector` compares 16x16 sampled luminance points and treats the frame as changed only when more than 10% of samples differ.
+3. `ImageChangeDetector` compares 16x16 sampled luminance points and treats the frame as changed when at least 3% of samples differ.
 4. If the image or OCR text is unchanged, the app waits.
 5. After 5 consecutive unchanged frames, monitoring forces one OCR + translation pass to catch missed low-contrast updates.
 6. When content changes or the force rule fires, PaddleOCR extracts source text from the original color capture after upscaling and light contrast enhancement.
-7. `CudaLlamaTranslationService` lazy-loads the local GGUF model if needed, then translates English text to Simplified Chinese.
-8. The WPF overlay/main window shows the latest translated result.
+7. If the OCR source text is the same as the previous successfully translated source text, the LLM call is skipped.
+8. `CudaLlamaTranslationService` lazy-loads the local GGUF model if needed, then translates English text to Simplified Chinese.
+9. The WPF overlay/main window shows the latest translated result.
 
 ### Translate Button
 

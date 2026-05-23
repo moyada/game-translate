@@ -129,8 +129,9 @@ The current build is the first integration slice:
 - The selection box has no confirm/cancel buttons. Region changes sync live while dragging.
 - Mouse operations outside the selection box pass through to the game/app below, so the topmost overlay does not block normal screen interaction.
 - Captures the selected screen region every 200 ms and detects image changes.
-- Treats a frame as changed only when more than 10% of sampled points differ from the previous frame.
+- Treats a frame as changed when at least 3% of sampled points differ from the previous frame.
 - Forces one OCR + translation pass after 5 consecutive unchanged frames.
+- Skips LLM translation when the OCR source text is identical to the previous successfully translated source text.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Uses PaddleOCR on the original color capture, then upscales it before recognition.
 - Applies stronger light contrast enhancement and sharpening after upscaling to improve low-contrast punctuation such as chat-name colons.
