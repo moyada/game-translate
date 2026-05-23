@@ -26,6 +26,12 @@ Download the `UD-Q4_K_XL` GGUF file from `unsloth/Qwen3-1.7B-GGUF`, then place i
 src/GameTranslate/Models/Qwen3-1.7B-UD-Q4_K_XL.gguf
 ```
 
+Manual download URL:
+
+```text
+https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-UD-Q4_K_XL.gguf?download=true
+```
+
 At runtime, the app chooses the first `*.gguf` file in the `Models` folder by file name. If no GGUF file exists, it falls back to this expected path:
 
 ```text
