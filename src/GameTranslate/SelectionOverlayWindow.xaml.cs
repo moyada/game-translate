@@ -7,6 +7,7 @@ using WpfKey = System.Windows.Input.Key;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
 using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
 using WpfPoint = System.Windows.Point;
+using WpfRectangle = System.Windows.Shapes.Rectangle;
 
 namespace GameTranslate;
 
@@ -82,7 +83,7 @@ public partial class SelectionOverlayWindow : Window
     private void Handle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         BeginDrag(e, GetHandleDragMode(sender));
-        if (sender is Rectangle handle)
+        if (sender is WpfRectangle handle)
         {
             handle.CaptureMouse();
         }
@@ -99,7 +100,7 @@ public partial class SelectionOverlayWindow : Window
     private void Handle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         EndDrag();
-        if (sender is Rectangle handle)
+        if (sender is WpfRectangle handle)
         {
             handle.ReleaseMouseCapture();
         }
