@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace GameTranslate.Services;
 
 public static class NativeDependencyDiagnostics
@@ -29,4 +31,3 @@ public static class NativeDependencyDiagnostics
         return "已找到 LLamaSharp native DLL:" + Environment.NewLine + string.Join(Environment.NewLine, existingFiles);
     }
 }
-

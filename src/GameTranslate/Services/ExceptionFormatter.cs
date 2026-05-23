@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 
 namespace GameTranslate.Services;
@@ -32,4 +33,3 @@ public static class ExceptionFormatter
         return builder.ToString().Trim();
     }
 }
-
