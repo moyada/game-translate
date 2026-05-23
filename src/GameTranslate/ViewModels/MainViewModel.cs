@@ -290,7 +290,32 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         _lastOcrText = ocrText;
         SourceText = ocrText;
-        CaptureStatusText = "OCR 已更新英文文本";
+
+        if (!_isModelLoaded)
+        {
+            CaptureStatusText = "OCR 已更新英文文本，等待模型加载";
+            return;
+        }
+
+        await TranslateOcrTextAsync(ocrText);
+    }
+
+    private async Task TranslateOcrTextAsync(string ocrText)
+    {
+        try
+        {
+            CaptureStatusText = "OCR 已更新，正在自动翻译";
+            StatusText = "正在自动翻译...";
+            TranslatedText = await _translationService.TranslateToChineseAsync(ocrText);
+            StatusText = "自动翻译完成";
+            CaptureStatusText = "OCR 文本已自动翻译";
+        }
+        catch (Exception ex)
+        {
+            StatusText = "自动翻译失败";
+            TranslatedText = ex.Message;
+            CaptureStatusText = "OCR 已更新，自动翻译失败";
+        }
     }
 
     public void Dispose()

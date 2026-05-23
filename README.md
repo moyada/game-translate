@@ -77,7 +77,8 @@ The current build is the first integration slice:
 - Uses a full-screen draggable selection box directly over the chat area.
 - Captures the selected screen region every 200 ms and detects image changes.
 - Runs Windows OCR when the selected region changes, then writes recognized text into the source text box.
+- Automatically translates changed OCR text when the CUDA model is loaded.
 - Provides manual English input and Chinese translation output in WPF.
 - Shows model load failures directly in the UI.
 
-The next implementation slice should connect changed OCR text into the translation pipeline.
+The next implementation slice should improve overlay/result presentation and tune OCR/change-detection behavior for real game chat.
