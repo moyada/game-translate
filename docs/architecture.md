@@ -20,7 +20,7 @@
 
 ## Current Build
 
-The current implementation completes the local model loading, manual text translation path, draggable region selection, selected-region screenshot capture, and 200 ms image change detection. OCR is the next module to add.
+The current implementation completes the local model loading, manual text translation path, draggable region selection, selected-region screenshot capture, 200 ms image change detection, and Windows OCR text extraction. Automatic LLM translation after OCR is the next module to add.
 
 ## Model Placement
 

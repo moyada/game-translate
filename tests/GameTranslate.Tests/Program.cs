@@ -9,6 +9,7 @@ var tests = new List<(string Name, Action Test)>
     ("capture region display", CaptureRegionDisplay),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
+    ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("translation options", TranslationOptionsDefaults),
     ("prompt content", PromptContent),
     ("blank prompt", BlankPrompt)
@@ -119,6 +120,19 @@ static byte[] CreateBgraPixels(int width, int height, byte blue, byte green, byt
     }
 
     return pixels;
+}
+
+static void OcrTextNormalizerTrimsAndDropsBlankLines()
+{
+    var text = OcrTextNormalizer.NormalizeLines(new[]
+    {
+        "  hello team  ",
+        "",
+        "   ",
+        " push mid "
+    });
+
+    Assert(text == $"hello team{Environment.NewLine}push mid", text);
 }
 
 static void PromptContent()

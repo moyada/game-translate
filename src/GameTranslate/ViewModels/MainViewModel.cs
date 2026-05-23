@@ -9,6 +9,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private readonly ITranslationService _translationService;
     private readonly IScreenCaptureService _screenCaptureService;
+    private readonly IOcrService _ocrService;
     private readonly DispatcherTimer _captureTimer;
     private readonly RelayCommand _loadModelCommand;
     private readonly RelayCommand _translateCommand;
@@ -22,6 +23,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private CaptureRegion _captureRegion;
     private ImageSource? _latestCaptureImage;
     private ImageFingerprint? _lastFingerprint;
+    private string _lastOcrText = string.Empty;
     private int _captureCount;
     private int _changedFrameCount;
     private bool _isModelLoaded;
@@ -29,14 +31,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isCapturing;
 
     public MainViewModel()
-        : this(new CudaLlamaTranslationService(), new ScreenCaptureService())
+        : this(new CudaLlamaTranslationService(), new ScreenCaptureService(), new WindowsOcrService())
     {
     }
 
-    public MainViewModel(ITranslationService translationService, IScreenCaptureService screenCaptureService)
+    public MainViewModel(
+        ITranslationService translationService,
+        IScreenCaptureService screenCaptureService,
+        IOcrService ocrService)
     {
         _translationService = translationService;
         _screenCaptureService = screenCaptureService;
+        _ocrService = ocrService;
         _captureTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(200)
@@ -157,6 +163,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         CaptureRegion = captureRegion;
         _lastFingerprint = null;
+        _lastOcrText = string.Empty;
         StatusText = "已选择截图区域";
         CaptureStatusText = "截图区域已更新";
     }
@@ -207,6 +214,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
 
         _lastFingerprint = null;
+        _lastOcrText = string.Empty;
         CaptureCount = 0;
         ChangedFrameCount = 0;
         IsMonitoring = true;
@@ -244,7 +252,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (changed)
             {
                 ChangedFrameCount++;
-                CaptureStatusText = "检测到区域变化";
+                await RunOcrAsync(frame);
             }
             else
             {
@@ -261,6 +269,28 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             _isCapturing = false;
         }
+    }
+
+    private async Task RunOcrAsync(CapturedFrame frame)
+    {
+        CaptureStatusText = "检测到区域变化，正在 OCR";
+        var ocrText = await _ocrService.RecognizeTextAsync(frame);
+
+        if (string.IsNullOrWhiteSpace(ocrText))
+        {
+            CaptureStatusText = "OCR 未识别到文字";
+            return;
+        }
+
+        if (string.Equals(_lastOcrText, ocrText, StringComparison.Ordinal))
+        {
+            CaptureStatusText = "OCR 文字未变化";
+            return;
+        }
+
+        _lastOcrText = ocrText;
+        SourceText = ocrText;
+        CaptureStatusText = "OCR 已更新英文文本";
     }
 
     public void Dispose()
