@@ -8,6 +8,7 @@ var tests = new List<(string Name, Action Test)>
     ("capture region normalize", CaptureRegionNormalize),
     ("capture region display", CaptureRegionDisplay),
     ("coordinate scaler scales capture region", CoordinateScalerScalesCaptureRegion),
+    ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
@@ -100,6 +101,19 @@ static void CoordinateScalerScalesCaptureRegion()
     Assert(scaled.Y == 300, "Y mismatch");
     Assert(scaled.Width == 375, "Width mismatch");
     Assert(scaled.Height == 120, "Height mismatch");
+}
+
+static void CaptureSelectionDisplayIncludesScale()
+{
+    var selection = new CaptureSelection(
+        new CaptureRegion(10, 20, 100, 50),
+        new CaptureRegion(15, 30, 150, 75),
+        1.5,
+        1.5);
+
+    var text = selection.ToDisplayText();
+    Assert(text.Contains("X=15, Y=30, W=150, H=75", StringComparison.Ordinal), text);
+    Assert(text.Contains("缩放 150% x 150%", StringComparison.Ordinal), text);
 }
 
 static void ImageChangeDetectorUnchanged()

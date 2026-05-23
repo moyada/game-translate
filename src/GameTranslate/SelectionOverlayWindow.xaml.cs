@@ -43,7 +43,11 @@ public partial class SelectionOverlayWindow : Window
 
     public CaptureRegion SelectedRegion { get; private set; }
 
-    public CaptureRegion SelectedPixelRegion => CoordinateScaler.Scale(SelectedRegion, _screenScaleX, _screenScaleY);
+    public CaptureSelection SelectedCaptureSelection => new(
+        SelectedRegion,
+        CoordinateScaler.Scale(SelectedRegion, _screenScaleX, _screenScaleY),
+        _screenScaleX,
+        _screenScaleY);
 
     private CaptureRegion CurrentRegion
     {
@@ -210,7 +214,7 @@ public partial class SelectionOverlayWindow : Window
 
         Canvas.SetLeft(Toolbar, Math.Clamp(x, 0, Math.Max(0, Width - 420)));
         Canvas.SetTop(Toolbar, Math.Clamp(y + height + 10, 0, Math.Max(0, Height - 48)));
-        RegionText.Text = CurrentRegion.ToDisplayText();
+        RegionText.Text = $"{CurrentRegion.ToDisplayText()} · 缩放 {_screenScaleX * 100:0}% x {_screenScaleY * 100:0}%";
     }
 
     private DragMode GetHandleDragMode(object sender)

@@ -20,7 +20,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _translatedText = string.Empty;
     private string _statusText = "模型未加载";
     private string _captureStatusText = "截图监控未开始";
-    private CaptureRegion _captureRegion;
+    private CaptureSelection _captureSelection = new(default, default, 1, 1);
     private ImageSource? _latestCaptureImage;
     private ImageFingerprint? _lastFingerprint;
     private string _lastOcrText = string.Empty;
@@ -51,7 +51,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _modelPath = ModelPathResolver.GetDefaultModelPath(AppContext.BaseDirectory);
         _loadModelCommand = new RelayCommand(LoadModelAsync, () => !_isModelLoaded);
         _translateCommand = new RelayCommand(TranslateAsync, () => _isModelLoaded && !string.IsNullOrWhiteSpace(SourceText));
-        _startMonitoringCommand = new RelayCommand(StartMonitoringAsync, () => !IsMonitoring && !CaptureRegion.IsEmpty);
+        _startMonitoringCommand = new RelayCommand(StartMonitoringAsync, () => !IsMonitoring && !CaptureSelection.IsEmpty);
         _stopMonitoringCommand = new RelayCommand(StopMonitoringAsync, () => IsMonitoring);
     }
 
@@ -91,12 +91,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _captureStatusText, value);
     }
 
-    public CaptureRegion CaptureRegion
+    public CaptureSelection CaptureSelection
     {
-        get => _captureRegion;
+        get => _captureSelection;
         private set
         {
-            if (SetProperty(ref _captureRegion, value))
+            if (SetProperty(ref _captureSelection, value))
             {
                 OnPropertyChanged(nameof(CaptureRegionText));
                 _startMonitoringCommand.RaiseCanExecuteChanged();
@@ -104,7 +104,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    public string CaptureRegionText => CaptureRegion.ToDisplayText();
+    public string CaptureRegionText => CaptureSelection.ToDisplayText();
 
     public ImageSource? LatestCaptureImage
     {
@@ -159,9 +159,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public RelayCommand StopMonitoringCommand => _stopMonitoringCommand;
 
-    public void SetCaptureRegion(CaptureRegion captureRegion)
+    public void SetCaptureSelection(CaptureSelection captureSelection)
     {
-        CaptureRegion = captureRegion;
+        CaptureSelection = captureSelection;
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
         StatusText = "已选择截图区域";
@@ -207,7 +207,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private async Task StartMonitoringAsync()
     {
-        if (CaptureRegion.IsEmpty)
+        if (CaptureSelection.IsEmpty)
         {
             CaptureStatusText = "请先选择截图区域";
             return;
@@ -241,7 +241,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _isCapturing = true;
         try
         {
-            var frame = await Task.Run(() => _screenCaptureService.Capture(CaptureRegion));
+            var frame = await Task.Run(() => _screenCaptureService.Capture(CaptureSelection.PixelRegion));
             var fingerprint = ImageChangeDetector.CreateFingerprint(frame.BgraPixels, frame.Width, frame.Height, frame.Stride);
             var changed = ImageChangeDetector.HasMeaningfulChange(_lastFingerprint, fingerprint);
 

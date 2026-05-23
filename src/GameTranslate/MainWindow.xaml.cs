@@ -18,14 +18,14 @@ public partial class MainWindow : Window
             return;
         }
 
-        var overlay = new SelectionOverlayWindow(viewModel.CaptureRegion)
+        var overlay = new SelectionOverlayWindow(viewModel.CaptureSelection.DisplayRegion)
         {
             Owner = this
         };
 
         if (overlay.ShowDialog() == true)
         {
-            viewModel.SetCaptureRegion(overlay.SelectedPixelRegion);
+            viewModel.SetCaptureSelection(overlay.SelectedCaptureSelection);
         }
     }
 
