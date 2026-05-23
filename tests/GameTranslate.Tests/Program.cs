@@ -36,6 +36,9 @@ var tests = new List<(string Name, Action Test)>
     ("qwen chat prompt content", QwenChatPromptContent),
     ("simple translation prompt", SimpleTranslationPrompt),
     ("chat speaker prefix stripped", ChatSpeakerPrefixStripped),
+    ("chat speaker prefix restored", ChatSpeakerPrefixRestored),
+    ("chat speaker prefix ocr separators", ChatSpeakerPrefixOcrSeparators),
+    ("chat at mention prefix preserved", ChatAtMentionPrefixPreserved),
     ("maplestory glossary prompt content", MapleStoryGlossaryPromptContent),
     ("maplestory glossary file persists entries", MapleStoryGlossaryFilePersistsEntries),
     ("translation output removes think block", TranslationOutputRemovesThinkBlock),
@@ -408,6 +411,41 @@ static void ChatSpeakerPrefixStripped()
     var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt("Steam : ew you have cooties get away from me");
     Assert(prompt.Contains("ew you have cooties get away from me", StringComparison.Ordinal), "missing chat content");
     Assert(!prompt.Contains("Steam :", StringComparison.Ordinal), "speaker name should not be sent as source text");
+}
+
+static void ChatSpeakerPrefixRestored()
+{
+    var text = TranslationSourceNormalizer.ApplySpeakerPrefix("Steam : ew you have cooties get away from me", "恶心，离我远点");
+    Assert(text == "Steam：恶心，离我远点", text);
+}
+
+static void ChatSpeakerPrefixOcrSeparators()
+{
+    var semicolon = TranslationSourceNormalizer.Parse("Steam ; ew you have cooties");
+    Assert(semicolon.SpeakerPrefix == "Steam", semicolon.SpeakerPrefix ?? "missing speaker");
+    Assert(semicolon.TranslatableText == "ew you have cooties", semicolon.TranslatableText);
+
+    var space = TranslationSourceNormalizer.Parse("Steam ew you have cooties");
+    Assert(space.SpeakerPrefix == "Steam", space.SpeakerPrefix ?? "missing speaker");
+    Assert(space.TranslatableText == "ew you have cooties", space.TranslatableText);
+
+    var normalSentence = TranslationSourceNormalizer.Parse("go kill Slime");
+    Assert(normalSentence.SpeakerPrefix is null, normalSentence.SpeakerPrefix ?? "unexpected speaker");
+    Assert(normalSentence.TranslatableText == "go kill Slime", normalSentence.TranslatableText);
+
+    var greeting = TranslationSourceNormalizer.Parse("Hello team");
+    Assert(greeting.SpeakerPrefix is null, greeting.SpeakerPrefix ?? "unexpected speaker");
+    Assert(greeting.TranslatableText == "Hello team", greeting.TranslatableText);
+}
+
+static void ChatAtMentionPrefixPreserved()
+{
+    var parsed = TranslationSourceNormalizer.Parse("@Steam ew you have cooties");
+    Assert(parsed.SpeakerPrefix == "@Steam", parsed.SpeakerPrefix ?? "missing speaker");
+    Assert(parsed.TranslatableText == "ew you have cooties", parsed.TranslatableText);
+
+    var text = TranslationSourceNormalizer.ApplySpeakerPrefix("@Steam ew you have cooties", "恶心，离我远点");
+    Assert(text == "@Steam：恶心，离我远点", text);
 }
 
 static void MapleStoryGlossaryPromptContent()

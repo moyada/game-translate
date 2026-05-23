@@ -28,7 +28,7 @@
 1. User clicks translate after a capture rectangle exists.
 2. The app captures the selected region once.
 3. PaddleOCR extracts source text once.
-4. `TranslationSourceNormalizer` removes player-name prefixes such as `Steam :`.
+4. `TranslationSourceNormalizer` removes player-name prefixes such as `Steam :`, OCR-damaged `Steam ;`, `Steam `, and `@Steam `.
 5. `TranslationPromptBuilder` injects only glossary terms that match the current OCR text.
 6. `CudaLlamaTranslationService` lazy-loads the local GGUF model if needed, then translates the OCR text once.
 7. The displayed result is cleaned to remove Qwen thinking blocks such as `<think>...</think>` and chat stop tokens.
@@ -40,6 +40,8 @@ The selection overlay is a topmost transparent WPF window, but its native hit te
 The selection overlay owns the enabled state of monitoring and translation. With no selected region both buttons are visible but disabled. Closing the selection overlay stops monitoring, clears the selected region, and returns both buttons to disabled state.
 
 Glossary entries are stored as project data, not hard-coded in the prompt. The runtime keeps prompts small by selecting only entries whose English term or alias appears in the OCR text. The initial seed contains monsters, maps, NPCs, jobs, and common chat terms gathered from the specified MapleStory reference pages.
+
+When a single chat line has a detected player prefix, the prefix is kept out of the LLM prompt and restored after generation as `用户名：译文`. This avoids translating names while still showing who spoke.
 
 ## Current Build
 

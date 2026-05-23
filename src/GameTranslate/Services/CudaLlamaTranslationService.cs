@@ -71,7 +71,13 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt(text);
+            var sourceContext = TranslationSourceNormalizer.Parse(text);
+            if (string.IsNullOrWhiteSpace(sourceContext.TranslatableText))
+            {
+                return string.Empty;
+            }
+
+            var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt(sourceContext.TranslatableText);
             var output = new StringBuilder();
 
             using var context = _weights!.CreateContext(_modelParams!);
@@ -91,7 +97,8 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
                 output.Append(token);
             }
 
-            return TranslationOutputCleaner.Clean(output.ToString());
+            var cleaned = TranslationOutputCleaner.Clean(output.ToString());
+            return TranslationSourceNormalizer.ApplySpeakerPrefix(text, cleaned);
         }
         finally
         {

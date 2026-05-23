@@ -137,7 +137,7 @@ The current build is the first integration slice:
 - Monitoring runs a continuous loop over the selected region: capture, skip unchanged images/text, PaddleOCR, then translate changed OCR text.
 - The translate button runs a single pass over the selected region: capture once, PaddleOCR once, then translate once.
 - Writes recognized OCR text into the source text box.
-- Strips player-name prefixes such as `Steam : message` before building the LLM prompt, so only the message content is translated.
+- Strips player-name prefixes such as `Steam : message`, OCR-damaged `Steam ; message`, `Steam message`, or `@Steam message` before building the LLM prompt, then restores the original name as `Steam：译文`.
 - Loads relevant MapleStory glossary entries from `Resources/Glossary/maplestory-glossary.json` and injects only matching terms into the prompt.
 - Automatically lazy-loads the CUDA model before the first manual or monitoring translation.
 - Removes Qwen thinking blocks such as `<think>...</think>` and chat stop tokens from the displayed translation result.
