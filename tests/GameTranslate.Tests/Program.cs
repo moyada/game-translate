@@ -11,12 +11,7 @@ var tests = new List<(string Name, Action Test)>
     ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
-    ("ocr preprocessor detects colored text", OcrPreprocessorDetectsColoredText),
-    ("ocr preprocessor converts colored text to black", OcrPreprocessorConvertsColoredTextToBlack),
-    ("ocr preprocessor output stride", OcrPreprocessorOutputStride),
-    ("ocr backend choices", OcrBackendChoices),
-    ("ocr backend default", OcrBackendDefault),
-    ("ocr backend preprocessing policy", OcrBackendPreprocessingPolicy),
+    ("paddle ocr preview label", PaddleOcrPreviewLabel),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
     ("selection overlay confirm closes", SelectionOverlayConfirmCloses),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
@@ -159,59 +154,9 @@ static byte[] CreateBgraPixels(int width, int height, byte blue, byte green, byt
     return pixels;
 }
 
-static void OcrPreprocessorDetectsColoredText()
+static void PaddleOcrPreviewLabel()
 {
-    Assert(OcrImagePreprocessor.IsLikelyTextPixel(210, 210, 20), "yellow notice text should be treated as text");
-    Assert(OcrImagePreprocessor.IsLikelyTextPixel(165, 35, 130), "magenta chat text should be treated as text");
-    Assert(!OcrImagePreprocessor.IsLikelyTextPixel(130, 130, 130), "gray chat background should not be treated as text");
-    Assert(!OcrImagePreprocessor.IsLikelyTextPixel(220, 220, 220), "bright border should not be treated as text");
-    Assert(!OcrImagePreprocessor.IsLikelyTextPixel(70, 170, 210), "cyan UI icon should not be treated as text");
-}
-
-static void OcrPreprocessorConvertsColoredTextToBlack()
-{
-    const int width = 3;
-    const int height = 3;
-    var pixels = CreateBgraPixels(width, height, 130, 130, 130);
-    var centerOffset = (1 * width + 1) * 4;
-    pixels[centerOffset] = 20;
-    pixels[centerOffset + 1] = 210;
-    pixels[centerOffset + 2] = 210;
-    pixels[centerOffset + 3] = 255;
-
-    var processed = OcrImagePreprocessor.CreateHighContrastBgra(pixels, width, height, width * 4);
-    Assert(processed[centerOffset] == 0, "text blue channel should be black");
-    Assert(processed[centerOffset + 1] == 0, "text green channel should be black");
-    Assert(processed[centerOffset + 2] == 0, "text red channel should be black");
-    Assert(processed[0] == 255, "background should be white");
-}
-
-static void OcrPreprocessorOutputStride()
-{
-    Assert(OcrImagePreprocessor.GetOutputStride(17) == 68, "stride should be width * 4");
-}
-
-static void OcrBackendChoices()
-{
-    var choices = OcrBackendCatalog.Choices;
-    Assert(choices.Count == 2, $"expected 2 choices, got {choices.Count}");
-    Assert(choices[0].Backend == OcrBackend.Windows, "Windows OCR should be first/default");
-    Assert(choices[0].DisplayName == "Windows OCR", choices[0].DisplayName);
-    Assert(choices[0].PreviewLabel == "OCR 预处理预览", choices[0].PreviewLabel);
-    Assert(choices[1].Backend == OcrBackend.PaddleSharp, "PaddleOCR option missing");
-    Assert(choices[1].DisplayName == "PaddleOCR", choices[1].DisplayName);
-    Assert(choices[1].PreviewLabel == "PaddleOCR 输入预览", choices[1].PreviewLabel);
-}
-
-static void OcrBackendDefault()
-{
-    Assert(OcrBackendCatalog.DefaultBackend == OcrBackend.Windows, "default OCR backend should stay Windows OCR");
-}
-
-static void OcrBackendPreprocessingPolicy()
-{
-    Assert(OcrBackendCatalog.Choices[0].UsesColorPreprocessing, "Windows OCR should use color preprocessing");
-    Assert(!OcrBackendCatalog.Choices[1].UsesColorPreprocessing, "PaddleOCR should use original color capture");
+    Assert(PaddleSharpOcrService.PreviewLabel == "PaddleOCR 输入预览", PaddleSharpOcrService.PreviewLabel);
 }
 
 static void PaddleOcrUpscaleFactor()

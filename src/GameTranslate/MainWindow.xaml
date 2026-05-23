@@ -29,13 +29,6 @@
     <Style TargetType="TextBlock">
       <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
-    <Style TargetType="ComboBox">
-      <Setter Property="Height" Value="34" />
-      <Setter Property="Padding" Value="8,0" />
-      <Setter Property="BorderBrush" Value="#D1D5DB" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="Background" Value="White" />
-    </Style>
   </Window.Resources>
 
   <Grid Margin="24">
@@ -70,32 +63,23 @@
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
       <TextBox Grid.Column="0"
                Text="{Binding ModelPath, UpdateSourceTrigger=PropertyChanged}"
                ToolTip="GGUF 模型路径" />
-      <ComboBox Grid.Column="1"
-                Width="132"
-                Margin="12,0,0,0"
-                ItemsSource="{Binding OcrBackendChoices}"
-                SelectedItem="{Binding SelectedOcrBackendChoice}"
-                DisplayMemberPath="DisplayName"
-                IsEnabled="{Binding IsOcrBackendSelectionEnabled}"
-                ToolTip="OCR 后端" />
-      <Button Grid.Column="2"
+      <Button Grid.Column="1"
               Margin="12,0,0,0"
               Content="选择区域"
               Click="SelectRegion_Click" />
-      <Button Grid.Column="3"
+      <Button Grid.Column="2"
               Margin="12,0,0,0"
               Content="开始监控"
               Command="{Binding StartMonitoringCommand}" />
-      <Button Grid.Column="4"
+      <Button Grid.Column="3"
               Margin="12,0,0,0"
               Content="停止监控"
               Command="{Binding StopMonitoringCommand}" />
-      <Button Grid.Column="5"
+      <Button Grid.Column="4"
               Margin="12,0,0,0"
               Content="加载模型"
               Command="{Binding LoadModelCommand}" />

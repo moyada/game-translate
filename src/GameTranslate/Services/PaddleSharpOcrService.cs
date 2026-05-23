@@ -10,6 +10,8 @@ namespace GameTranslate.Services;
 
 public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 {
+    public const string PreviewLabel = "PaddleOCR 输入预览";
+
     public const double InputScaleFactor = 3.0;
 
     private readonly Lazy<PaddleOcrAll> _ocr = new(CreateOcr);
