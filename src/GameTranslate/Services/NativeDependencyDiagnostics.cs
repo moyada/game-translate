@@ -11,7 +11,10 @@ public static class NativeDependencyDiagnostics
         "ggml-base.dll",
         "ggml-cpu.dll",
         "ggml-cuda.dll",
-        "ggml-rpc.dll"
+        "ggml-rpc.dll",
+        "cudart64_12.dll",
+        "cublas64_12.dll",
+        "cublasLt64_12.dll"
     };
 
     public static string CreateReport(string appBaseDirectory)

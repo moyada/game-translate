@@ -11,6 +11,7 @@ var tests = new List<(string Name, Action Test)>
     ("image change detector changed", ImageChangeDetectorChanged),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
+    ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
     ("translation options", TranslationOptionsDefaults),
     ("prompt content", PromptContent),
     ("blank prompt", BlankPrompt)
@@ -146,6 +147,30 @@ static void ExceptionFormatterIncludesInnerException()
     Assert(text.Contains("System.InvalidOperationException: outer", StringComparison.Ordinal), text);
     Assert(text.Contains("System.IO.FileNotFoundException: missing native dll", StringComparison.Ordinal), text);
     Assert(text.Contains("File: llama.dll", StringComparison.Ordinal), text);
+}
+
+static void CudaNativeLibraryResolverMissingFile()
+{
+    var baseDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+    try
+    {
+        try
+        {
+            _ = CudaNativeLibraryResolver.GetCudaLlamaLibraryPath(baseDirectory);
+            throw new InvalidOperationException("resolver should throw");
+        }
+        catch (FileNotFoundException ex)
+        {
+            Assert(ex.FileName?.EndsWith(Path.Combine("runtimes", "win-x64", "native", "cuda12", "llama.dll"), StringComparison.Ordinal) == true, ex.FileName ?? "missing filename");
+        }
+    }
+    finally
+    {
+        if (Directory.Exists(baseDirectory))
+        {
+            Directory.Delete(baseDirectory, recursive: true);
+        }
+    }
 }
 
 static void PromptContent()

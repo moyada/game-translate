@@ -72,7 +72,7 @@ Check the output folder:
 dir src\GameTranslate\bin\x64\Release\net8.0-windows10.0.19041.0 -Recurse -Filter *.dll | findstr /i "llama ggml cuda"
 ```
 
-Expected files include `llama.dll`, `ggml.dll`, `ggml-base.dll`, `ggml-cpu.dll`, and `ggml-cuda.dll`.
+Expected files include `runtimes\win-x64\native\cuda12\llama.dll`, `ggml.dll`, `ggml-base.dll`, and `ggml-cuda.dll`. The app explicitly loads the CUDA12 `llama.dll`; CPU fallback is not enabled.
 
 ## Test
 
