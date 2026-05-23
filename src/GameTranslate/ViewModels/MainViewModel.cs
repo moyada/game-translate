@@ -62,7 +62,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref _sourceText, value))
             {
-                _translateCommand.RaiseCanExecuteChanged();
                 OnPropertyChanged(nameof(CanTranslate));
             }
         }
@@ -95,6 +94,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 OnPropertyChanged(nameof(CaptureRegionText));
                 _toggleMonitoringCommand.RaiseCanExecuteChanged();
+                _translateCommand.RaiseCanExecuteChanged();
                 OnPropertyChanged(nameof(CanStartMonitoring));
                 OnPropertyChanged(nameof(CanToggleMonitoring));
                 OnPropertyChanged(nameof(CanTranslate));
@@ -148,7 +148,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (SetProperty(ref _isMonitoring, value))
             {
                 _toggleMonitoringCommand.RaiseCanExecuteChanged();
-                _translateCommand.RaiseCanExecuteChanged();
                 OnPropertyChanged(nameof(CanStartMonitoring));
                 OnPropertyChanged(nameof(CanToggleMonitoring));
                 OnPropertyChanged(nameof(CanTranslate));
@@ -165,10 +164,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (SetProperty(ref _isCapturing, value))
             {
                 _toggleMonitoringCommand.RaiseCanExecuteChanged();
-                _translateCommand.RaiseCanExecuteChanged();
                 OnPropertyChanged(nameof(CanStartMonitoring));
                 OnPropertyChanged(nameof(CanToggleMonitoring));
-                OnPropertyChanged(nameof(CanTranslate));
             }
         }
     }
@@ -177,7 +174,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public bool CanToggleMonitoring => !CaptureSelection.IsEmpty && (IsMonitoring || !IsCaptureBusy);
 
-    public bool CanTranslate => !CaptureSelection.IsEmpty && !IsCaptureBusy && !string.IsNullOrWhiteSpace(SourceText);
+    public bool CanTranslate => !CaptureSelection.IsEmpty;
 
     public string MonitoringButtonText => IsMonitoring ? "停止监控" : "开始监控";
 
@@ -251,6 +248,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (CaptureSelection.IsEmpty)
             {
                 StatusText = "请先选择截图区域";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(SourceText))
+            {
+                StatusText = "没有可翻译文本";
                 return;
             }
 

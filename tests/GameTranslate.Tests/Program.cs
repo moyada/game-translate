@@ -12,6 +12,7 @@ var tests = new List<(string Name, Action Test)>
     ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
     ("monitoring start requires selection", MonitoringStartRequiresSelection),
     ("translate requires selection", TranslateRequiresSelection),
+    ("translate command refreshes on selection", TranslateCommandRefreshesOnSelection),
     ("clear selection disables controls", ClearSelectionDisablesControls),
     ("monitoring button text", MonitoringButtonText),
     ("llm lazy load policy", LlmLazyLoadPolicy),
@@ -160,6 +161,30 @@ static void TranslateRequiresSelection()
         1));
     Assert(viewModel.CanTranslate, "translation should be enabled after selection");
     Assert(viewModel.TranslateCommand.CanExecute(null), "translation command should be enabled after selection");
+}
+
+static void TranslateCommandRefreshesOnSelection()
+{
+    using var viewModel = new MainViewModel(
+        new FakeTranslationService(),
+        new FakeScreenCaptureService(),
+        new FakeOcrService())
+    {
+        SourceText = string.Empty
+    };
+
+    var refreshCount = 0;
+    viewModel.TranslateCommand.CanExecuteChanged += (_, _) => refreshCount++;
+
+    viewModel.SetCaptureSelection(new CaptureSelection(
+        new CaptureRegion(10, 20, 100, 50),
+        new CaptureRegion(10, 20, 100, 50),
+        1,
+        1));
+
+    Assert(refreshCount > 0, "selection should refresh translation command state");
+    Assert(viewModel.CanTranslate, "translation should only require a selected region");
+    Assert(viewModel.TranslateCommand.CanExecute(null), "translation command should be enabled after selection even before OCR text arrives");
 }
 
 static void ClearSelectionDisablesControls()
