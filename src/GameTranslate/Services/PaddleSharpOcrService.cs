@@ -62,7 +62,7 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         using var bgr = new Mat();
         using var enlarged = new Mat();
         Cv2.CvtColor(bgra, bgr, ColorConversionCodes.BGRA2BGR);
-        Cv2.Resize(bgr, enlarged, CvSize.Zero, InputScaleFactor, InputScaleFactor, InterpolationFlags.Cubic);
+        Cv2.Resize(bgr, enlarged, new CvSize(), InputScaleFactor, InputScaleFactor, InterpolationFlags.Cubic);
 
         cancellationToken.ThrowIfCancellationRequested();
         var result = _ocr.Value.Run(enlarged);
