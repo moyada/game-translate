@@ -16,6 +16,10 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 
     public const bool RecreatesEngineAfterFailure = true;
 
+    public const bool RecreatesEngineAfterRecognition = true;
+
+    public const string FailureMessage = "PaddleOCR 识别失败，已重置 OCR 引擎。请再次点击翻译，或重新开始监控。";
+
     private readonly SemaphoreSlim _recognizeLock = new(1, 1);
     private readonly object _ocrSync = new();
     private PaddleOcrAll? _ocr;
@@ -45,7 +49,7 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         catch (Exception ex)
         {
             ResetOcrEngine();
-            throw new InvalidOperationException("PaddleOCR 识别失败，已重置 OCR 引擎。请重新开始监控。", ex);
+            throw new InvalidOperationException(FailureMessage, ex);
         }
         finally
         {
@@ -85,9 +89,16 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         Cv2.Resize(bgr, enlarged, new CvSize(), InputScaleFactor, InputScaleFactor, InterpolationFlags.Cubic);
 
         cancellationToken.ThrowIfCancellationRequested();
-        var result = GetOrCreateOcr().Run(enlarged);
-        cancellationToken.ThrowIfCancellationRequested();
-        return OcrTextNormalizer.NormalizeLines(SplitLines(result.Text));
+        try
+        {
+            var result = GetOrCreateOcr().Run(enlarged);
+            cancellationToken.ThrowIfCancellationRequested();
+            return OcrTextNormalizer.NormalizeLines(SplitLines(result.Text));
+        }
+        finally
+        {
+            ResetOcrEngine();
+        }
     }
 
     private PaddleOcrAll GetOrCreateOcr()

@@ -26,6 +26,8 @@ var tests = new List<(string Name, Action Test)>
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
     ("paddle ocr recreates engine after failure", PaddleOcrRecreatesEngineAfterFailure),
+    ("paddle ocr recreates engine after recognition", PaddleOcrRecreatesEngineAfterRecognition),
+    ("paddle ocr failure message supports manual retry", PaddleOcrFailureMessageSupportsManualRetry),
     ("selection overlay behavior", SelectionOverlayBehaviorFlags),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
@@ -306,6 +308,17 @@ static void PaddleOcrUpscaleFactor()
 static void PaddleOcrRecreatesEngineAfterFailure()
 {
     Assert(PaddleSharpOcrService.RecreatesEngineAfterFailure, "PaddleOCR engine should reset after native predictor failures");
+}
+
+static void PaddleOcrRecreatesEngineAfterRecognition()
+{
+    Assert(PaddleSharpOcrService.RecreatesEngineAfterRecognition, "PaddleOCR engine should reset after each native predictor run");
+}
+
+static void PaddleOcrFailureMessageSupportsManualRetry()
+{
+    Assert(PaddleSharpOcrService.FailureMessage.Contains("再次点击翻译", StringComparison.Ordinal), PaddleSharpOcrService.FailureMessage);
+    Assert(PaddleSharpOcrService.FailureMessage.Contains("重新开始监控", StringComparison.Ordinal), PaddleSharpOcrService.FailureMessage);
 }
 
 static void SelectionOverlayBehaviorFlags()

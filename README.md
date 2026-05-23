@@ -130,6 +130,7 @@ The current build is the first integration slice:
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Uses PaddleOCR on the original color capture without color preprocessing, then upscales it before recognition.
+- Recreates the PaddleOCR engine after each recognition to avoid stale native predictor state on repeated manual translations.
 - Cancels the active monitoring session on stop and waits for any in-flight PaddleOCR run to finish before allowing a new monitoring session.
 - Shows the raw capture preview and the PaddleOCR input preview for tuning.
 - Monitoring runs a continuous loop over the selected region: capture, skip unchanged images/text, PaddleOCR, then translate changed OCR text.

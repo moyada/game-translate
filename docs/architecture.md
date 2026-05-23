@@ -30,7 +30,7 @@
 4. `CudaLlamaTranslationService` lazy-loads the local GGUF model if needed, then translates the OCR text once.
 5. The displayed result is cleaned to remove Qwen thinking blocks such as `<think>...</think>` and chat stop tokens.
 
-Stopping monitoring cancels the active monitoring session. If PaddleOCR is already inside a native predictor run, the app waits for that run to return before allowing a new monitoring session. PaddleOCR calls are serialized, and the OCR engine is recreated after native predictor failures.
+Stopping monitoring cancels the active monitoring session. If PaddleOCR is already inside a native predictor run, the app waits for that run to return before allowing a new monitoring session. PaddleOCR calls are serialized, and the OCR engine is recreated after each recognition so repeated manual translations do not reuse stale native predictor state.
 
 The selection overlay is a topmost transparent WPF window, but its native hit test returns transparent outside the rectangle and resize handles. That keeps the selection box above the game while allowing normal clicks outside the box to pass through to the underlying app.
 
