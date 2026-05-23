@@ -32,6 +32,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public const bool UsesLazyModelLoading = true;
 
+    public const bool UsesSingleShotCaptureTranslation = true;
+
     public MainViewModel()
         : this(new CudaLlamaTranslationService(), new ScreenCaptureService(), new PaddleSharpOcrService())
     {
@@ -243,33 +245,36 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private async Task TranslateAsync()
     {
+        if (CaptureSelection.IsEmpty)
+        {
+            StatusText = "请先选择截图区域";
+            return;
+        }
+
+        if (IsCaptureBusy)
+        {
+            CaptureStatusText = "正在截图/OCR，请稍后再试";
+            return;
+        }
+
+        IsCaptureBusy = true;
         try
         {
-            if (CaptureSelection.IsEmpty)
-            {
-                StatusText = "请先选择截图区域";
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(SourceText))
-            {
-                StatusText = "没有可翻译文本";
-                return;
-            }
-
-            if (!await EnsureModelLoadedAsync())
-            {
-                return;
-            }
-
-            StatusText = "正在翻译...";
-            TranslatedText = await _translationService.TranslateToChineseAsync(SourceText);
-            StatusText = "翻译完成";
+            CaptureStatusText = "正在单次截图 OCR";
+            var frame = await Task.Run(() => _screenCaptureService.Capture(CaptureSelection.PixelRegion));
+            LatestCaptureImage = frame.Preview;
+            LatestOcrImage = frame.Preview;
+            CaptureCount++;
+            await RunOcrAsync(frame, CancellationToken.None, skipUnchangedText: false, isMonitoringCapture: false);
         }
         catch (Exception ex)
         {
             StatusText = "翻译失败";
             TranslatedText = ExceptionFormatter.Format(ex);
+        }
+        finally
+        {
+            IsCaptureBusy = false;
         }
     }
 
@@ -345,7 +350,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (changed)
             {
                 ChangedFrameCount++;
-                await RunOcrAsync(frame, cancellationToken);
+                await RunOcrAsync(frame, cancellationToken, skipUnchangedText: true, isMonitoringCapture: true);
             }
             else
             {
@@ -368,9 +373,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task RunOcrAsync(CapturedFrame frame, CancellationToken cancellationToken)
+    private async Task RunOcrAsync(
+        CapturedFrame frame,
+        CancellationToken cancellationToken,
+        bool skipUnchangedText,
+        bool isMonitoringCapture)
     {
-        CaptureStatusText = "检测到区域变化，正在 PaddleOCR";
+        CaptureStatusText = isMonitoringCapture ? "检测到区域变化，正在 PaddleOCR" : "正在 PaddleOCR";
         var ocrText = await _ocrService.RecognizeTextAsync(frame, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -380,7 +389,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (string.Equals(_lastOcrText, ocrText, StringComparison.Ordinal))
+        if (skipUnchangedText && string.Equals(_lastOcrText, ocrText, StringComparison.Ordinal))
         {
             CaptureStatusText = "OCR 文字未变化";
             return;
@@ -389,30 +398,30 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _lastOcrText = ocrText;
         SourceText = ocrText;
 
-        await TranslateOcrTextAsync(ocrText);
+        await TranslateOcrTextAsync(ocrText, isMonitoringCapture);
     }
 
-    private async Task TranslateOcrTextAsync(string ocrText)
+    private async Task TranslateOcrTextAsync(string ocrText, bool isMonitoringCapture)
     {
         try
         {
-            CaptureStatusText = "OCR 已更新，正在自动翻译";
-            StatusText = "正在自动翻译...";
+            CaptureStatusText = isMonitoringCapture ? "OCR 已更新，正在自动翻译" : "OCR 已完成，正在翻译";
+            StatusText = isMonitoringCapture ? "正在自动翻译..." : "正在翻译...";
             if (!await EnsureModelLoadedAsync())
             {
-                CaptureStatusText = "OCR 已更新，模型加载失败";
+                CaptureStatusText = isMonitoringCapture ? "OCR 已更新，模型加载失败" : "OCR 已完成，模型加载失败";
                 return;
             }
 
             TranslatedText = await _translationService.TranslateToChineseAsync(ocrText);
-            StatusText = "自动翻译完成";
-            CaptureStatusText = "OCR 文本已自动翻译";
+            StatusText = isMonitoringCapture ? "自动翻译完成" : "翻译完成";
+            CaptureStatusText = isMonitoringCapture ? "OCR 文本已自动翻译" : "单次截图 OCR 翻译完成";
         }
         catch (Exception ex)
         {
-            StatusText = "自动翻译失败";
+            StatusText = isMonitoringCapture ? "自动翻译失败" : "翻译失败";
             TranslatedText = ExceptionFormatter.Format(ex);
-            CaptureStatusText = "OCR 已更新，自动翻译失败";
+            CaptureStatusText = isMonitoringCapture ? "OCR 已更新，自动翻译失败" : "单次截图 OCR 翻译失败";
         }
     }
 

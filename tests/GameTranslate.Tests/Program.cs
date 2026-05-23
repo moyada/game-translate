@@ -1,6 +1,8 @@
 using GameTranslate.Services;
 using GameTranslate.Models;
 using GameTranslate.ViewModels;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 var tests = new List<(string Name, Action Test)>
 {
@@ -16,6 +18,8 @@ var tests = new List<(string Name, Action Test)>
     ("clear selection disables controls", ClearSelectionDisablesControls),
     ("monitoring button text", MonitoringButtonText),
     ("llm lazy load policy", LlmLazyLoadPolicy),
+    ("single shot translation policy", SingleShotTranslationPolicy),
+    ("manual translation captures ocr and translates once", ManualTranslationCapturesOcrAndTranslatesOnce),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
@@ -28,6 +32,7 @@ var tests = new List<(string Name, Action Test)>
     ("translation options", TranslationOptionsDefaults),
     ("qwen chat prompt content", QwenChatPromptContent),
     ("simple translation prompt", SimpleTranslationPrompt),
+    ("translation output removes think block", TranslationOutputRemovesThinkBlock),
     ("blank prompt", BlankPrompt)
 };
 
@@ -220,6 +225,38 @@ static void LlmLazyLoadPolicy()
     Assert(MainViewModel.UsesLazyModelLoading, "model should lazy-load on first translation");
 }
 
+static void SingleShotTranslationPolicy()
+{
+    Assert(MainViewModel.UsesSingleShotCaptureTranslation, "manual translation should capture, OCR, and translate once");
+}
+
+static void ManualTranslationCapturesOcrAndTranslatesOnce()
+{
+    var capture = new FakeScreenCaptureService();
+    var ocr = new FakeOcrService("hello, team");
+    var translation = new FakeTranslationService("大家好");
+    using var viewModel = new MainViewModel(translation, capture, ocr);
+
+    viewModel.SetCaptureSelection(new CaptureSelection(
+        new CaptureRegion(10, 20, 100, 50),
+        new CaptureRegion(10, 20, 100, 50),
+        1,
+        1));
+
+    viewModel.TranslateCommand.Execute(null);
+    SpinWait.SpinUntil(() => translation.TranslateCount == 1 || viewModel.StatusText == "翻译失败", TimeSpan.FromSeconds(2));
+
+    Assert(capture.CaptureCount == 1, $"capture count {capture.CaptureCount}");
+    Assert(ocr.CallCount == 1, $"ocr count {ocr.CallCount}");
+    Assert(translation.LoadCount == 1, $"load count {translation.LoadCount}");
+    Assert(translation.TranslateCount == 1, $"translate count {translation.TranslateCount}");
+    Assert(translation.LastText == "hello, team", translation.LastText ?? "missing translation text");
+    Assert(viewModel.SourceText == "hello, team", viewModel.SourceText);
+    Assert(viewModel.TranslatedText == "大家好", viewModel.TranslatedText);
+    Assert(viewModel.StatusText == "翻译完成", viewModel.StatusText);
+    Assert(!viewModel.IsCaptureBusy, "manual translation should release capture busy state");
+}
+
 static void ImageChangeDetectorUnchanged()
 {
     var pixels = CreateBgraPixels(32, 32, 40, 50, 60);
@@ -345,6 +382,12 @@ static void SimpleTranslationPrompt()
     Assert(!prompt.Contains("Text:", StringComparison.Ordinal), "legacy prompt marker should not be used");
 }
 
+static void TranslationOutputRemovesThinkBlock()
+{
+    var text = TranslationOutputCleaner.Clean("<think>\nI should translate this.\n</think>\n你好。<|im_end|>");
+    Assert(text == "你好。", text);
+}
+
 static void BlankPrompt()
 {
     Assert(TranslationPromptBuilder.BuildEnglishToChinesePrompt("   ") == string.Empty, "blank prompt should stay empty");
@@ -360,31 +403,82 @@ static void Assert(bool condition, string message)
 
 internal sealed class FakeTranslationService : ITranslationService
 {
+    private readonly string? _result;
+
+    public FakeTranslationService(string? result = null)
+    {
+        _result = result;
+    }
+
     public bool IsLoaded => true;
+
+    public int LoadCount { get; private set; }
+
+    public int TranslateCount { get; private set; }
+
+    public string? LastText { get; private set; }
 
     public Task LoadAsync(TranslationOptions options, CancellationToken cancellationToken = default)
     {
+        LoadCount++;
         return Task.CompletedTask;
     }
 
     public Task<string> TranslateToChineseAsync(string text, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(text);
+        TranslateCount++;
+        LastText = text;
+        return Task.FromResult(_result ?? text);
     }
 }
 
 internal sealed class FakeScreenCaptureService : IScreenCaptureService
 {
+    public int CaptureCount { get; private set; }
+
     public CapturedFrame Capture(CaptureRegion region)
     {
-        throw new NotSupportedException("not used by this test");
+        CaptureCount++;
+        return TestFrameFactory.Create();
     }
 }
 
 internal sealed class FakeOcrService : IOcrService
 {
+    private readonly string _text;
+
+    public FakeOcrService(string text = "")
+    {
+        _text = text;
+    }
+
+    public int CallCount { get; private set; }
+
     public Task<string> RecognizeTextAsync(CapturedFrame frame, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(string.Empty);
+        CallCount++;
+        return Task.FromResult(_text);
+    }
+}
+
+internal static class TestFrameFactory
+{
+    public static CapturedFrame Create()
+    {
+        const int width = 4;
+        const int height = 4;
+        const int stride = width * 4;
+        var pixels = new byte[stride * height];
+        for (var offset = 0; offset < pixels.Length; offset += 4)
+        {
+            pixels[offset] = 20;
+            pixels[offset + 1] = 30;
+            pixels[offset + 2] = 40;
+            pixels[offset + 3] = 255;
+        }
+
+        var preview = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgra32, null, pixels, stride);
+        preview.Freeze();
+        return new CapturedFrame(width, height, stride, pixels, preview);
     }
 }

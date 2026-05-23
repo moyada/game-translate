@@ -12,6 +12,8 @@ Windows 10 / Windows 11 x64 WPF app for translating selected game chat text with
 - CUDA runtime libraries: `NtvLibs.cuda12.cublas.runtime.win-x64`
 - OCR: PaddleOCR through PaddleSharp
 - Model loading: lazy-loaded on the first manual or automatic translation
+- Monitoring: continuous capture -> PaddleOCR -> translate loop for the selected region
+- Translate button: one-shot capture -> PaddleOCR -> translate for the selected region
 - CPU fallback: not supported in v1
 
 ## Requirements
@@ -130,8 +132,11 @@ The current build is the first integration slice:
 - Uses PaddleOCR on the original color capture without color preprocessing, then upscales it before recognition.
 - Cancels the active monitoring session on stop and waits for any in-flight PaddleOCR run to finish before allowing a new monitoring session.
 - Shows the raw capture preview and the PaddleOCR input preview for tuning.
-- Runs PaddleOCR when the selected region changes, then writes recognized text into the source text box.
-- Automatically lazy-loads the CUDA model and translates changed OCR text.
+- Monitoring runs a continuous loop over the selected region: capture, skip unchanged images/text, PaddleOCR, then translate changed OCR text.
+- The translate button runs a single pass over the selected region: capture once, PaddleOCR once, then translate once.
+- Writes recognized OCR text into the source text box.
+- Automatically lazy-loads the CUDA model before the first manual or monitoring translation.
+- Removes Qwen thinking blocks such as `<think>...</think>` and chat stop tokens from the displayed translation result.
 - Uses one Start/Stop monitoring button. The monitoring and translation buttons stay visible but are disabled until a capture region exists.
 - Closing the selection overlay stops monitoring and clears the capture region so monitoring/translation become unavailable again.
 - Provides manual English input and Chinese translation output in WPF.

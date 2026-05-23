@@ -13,12 +13,22 @@
 
 ## Pipeline
 
+### Monitoring
+
 1. User places a draggable capture rectangle over the chat area.
 2. The app captures the selected region every 200 ms.
 3. If the image or OCR text is unchanged, the app waits.
 4. When content changes, PaddleOCR extracts source text from the original color capture.
 5. `CudaLlamaTranslationService` lazy-loads the local GGUF model if needed, then translates English text to Simplified Chinese.
 6. The WPF overlay/main window shows the latest translated result.
+
+### Translate Button
+
+1. User clicks translate after a capture rectangle exists.
+2. The app captures the selected region once.
+3. PaddleOCR extracts source text once.
+4. `CudaLlamaTranslationService` lazy-loads the local GGUF model if needed, then translates the OCR text once.
+5. The displayed result is cleaned to remove Qwen thinking blocks such as `<think>...</think>` and chat stop tokens.
 
 Stopping monitoring cancels the active monitoring session. If PaddleOCR is already inside a native predictor run, the app waits for that run to return before allowing a new monitoring session. PaddleOCR calls are serialized, and the OCR engine is recreated after native predictor failures.
 
@@ -28,7 +38,7 @@ The selection overlay owns the enabled state of monitoring and translation. With
 
 ## Current Build
 
-The current implementation completes lazy local model loading, manual text translation path, draggable region selection, selected-region screenshot capture, 200 ms image change detection, PaddleOCR text extraction, and automatic LLM translation. Result overlay presentation and OCR tuning are the next modules to add.
+The current implementation completes lazy local model loading, single-shot selected-region translation, draggable region selection, selected-region screenshot capture, 200 ms image change detection, PaddleOCR text extraction, and automatic LLM translation. Result overlay presentation and OCR tuning are the next modules to add.
 
 ## Model Placement
 

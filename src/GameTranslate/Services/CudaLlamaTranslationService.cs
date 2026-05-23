@@ -91,20 +91,12 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
                 output.Append(token);
             }
 
-            return CleanOutput(output.ToString());
+            return TranslationOutputCleaner.Clean(output.ToString());
         }
         finally
         {
             _gate.Release();
         }
-    }
-
-    private static string CleanOutput(string value)
-    {
-        return value
-            .Replace("<|im_end|>", string.Empty, StringComparison.OrdinalIgnoreCase)
-            .Replace("<|endoftext|>", string.Empty, StringComparison.OrdinalIgnoreCase)
-            .Trim();
     }
 
     private void DisposeModel()
