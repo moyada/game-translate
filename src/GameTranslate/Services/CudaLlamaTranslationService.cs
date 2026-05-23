@@ -39,7 +39,6 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
 
             var cudaLlamaPath = CudaNativeLibraryResolver.GetCudaLlamaLibraryPath(AppContext.BaseDirectory);
             NativeLibraryConfig.All
-                .WithLogs(true)
                 .WithLibrary(cudaLlamaPath, string.Empty);
 
             _modelParams = new ModelParams(options.ModelPath)
