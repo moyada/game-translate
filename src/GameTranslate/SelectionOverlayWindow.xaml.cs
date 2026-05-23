@@ -3,6 +3,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Shapes;
 using GameTranslate.Models;
+using WpfKey = System.Windows.Input.Key;
+using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
+using WpfPoint = System.Windows.Point;
 
 namespace GameTranslate;
 
@@ -10,7 +14,7 @@ public partial class SelectionOverlayWindow : Window
 {
     private const double MinimumSelectionWidth = 80;
     private const double MinimumSelectionHeight = 40;
-    private Point _startMouse;
+    private WpfPoint _startMouse;
     private CaptureRegion _startRegion;
     private DragMode _dragMode = DragMode.None;
 
@@ -61,7 +65,7 @@ public partial class SelectionOverlayWindow : Window
         SelectionBorder.CaptureMouse();
     }
 
-    private void SelectionBorder_MouseMove(object sender, MouseEventArgs e)
+    private void SelectionBorder_MouseMove(object sender, WpfMouseEventArgs e)
     {
         if (_dragMode == DragMode.Move)
         {
@@ -84,7 +88,7 @@ public partial class SelectionOverlayWindow : Window
         }
     }
 
-    private void Handle_MouseMove(object sender, MouseEventArgs e)
+    private void Handle_MouseMove(object sender, WpfMouseEventArgs e)
     {
         if (_dragMode != DragMode.None && _dragMode != DragMode.Move)
         {
@@ -115,7 +119,7 @@ public partial class SelectionOverlayWindow : Window
         SelectedRegion = CurrentRegion;
     }
 
-    private void UpdateSelection(Point currentMouse)
+    private void UpdateSelection(WpfPoint currentMouse)
     {
         var deltaX = currentMouse.X - _startMouse.X;
         var deltaY = currentMouse.Y - _startMouse.Y;
@@ -225,13 +229,13 @@ public partial class SelectionOverlayWindow : Window
         DialogResult = false;
     }
 
-    private void Window_KeyDown(object sender, KeyEventArgs e)
+    private void Window_KeyDown(object sender, WpfKeyEventArgs e)
     {
-        if (e.Key == Key.Escape)
+        if (e.Key == WpfKey.Escape)
         {
             DialogResult = false;
         }
-        else if (e.Key == Key.Enter)
+        else if (e.Key == WpfKey.Enter)
         {
             SelectedRegion = CurrentRegion;
             DialogResult = true;
