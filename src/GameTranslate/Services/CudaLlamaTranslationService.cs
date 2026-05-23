@@ -24,7 +24,7 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
 
         if (string.IsNullOrWhiteSpace(options.ModelPath))
         {
-            throw new InvalidOperationException("请先设置 GGUF 模型路径。");
+            throw new InvalidOperationException("默认 GGUF 模型路径为空，请确认 Models 目录配置。");
         }
 
         if (!File.Exists(options.ModelPath))

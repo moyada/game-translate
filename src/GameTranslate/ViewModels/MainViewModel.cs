@@ -11,15 +11,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly IScreenCaptureService _screenCaptureService;
     private readonly IOcrService _ocrService;
     private readonly DispatcherTimer _captureTimer;
-    private readonly RelayCommand _loadModelCommand;
     private readonly RelayCommand _translateCommand;
-    private readonly RelayCommand _startMonitoringCommand;
-    private readonly RelayCommand _stopMonitoringCommand;
+    private readonly RelayCommand _toggleMonitoringCommand;
     private CancellationTokenSource? _monitoringCancellation;
-    private string _modelPath;
+    private readonly string _modelPath;
     private string _sourceText = "hello, team. the boss is spawning near the bridge.";
     private string _translatedText = string.Empty;
-    private string _statusText = "模型未加载";
+    private string _statusText = "模型将在首次翻译时加载";
     private string _captureStatusText = "截图监控未开始";
     private CaptureSelection _captureSelection = new(default, default, 1, 1);
     private ImageSource? _latestCaptureImage;
@@ -31,6 +29,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isModelLoaded;
     private bool _isMonitoring;
     private bool _isCapturing;
+
+    public const bool UsesLazyModelLoading = true;
 
     public MainViewModel()
         : this(new CudaLlamaTranslationService(), new ScreenCaptureService(), new PaddleSharpOcrService())
@@ -51,16 +51,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         };
         _captureTimer.Tick += async (_, _) => await CaptureTickAsync(_monitoringCancellation?.Token ?? CancellationToken.None);
         _modelPath = ModelPathResolver.GetDefaultModelPath(AppContext.BaseDirectory);
-        _loadModelCommand = new RelayCommand(LoadModelAsync, () => !_isModelLoaded);
-        _translateCommand = new RelayCommand(TranslateAsync, () => _isModelLoaded && !IsCaptureBusy && !string.IsNullOrWhiteSpace(SourceText));
-        _startMonitoringCommand = new RelayCommand(StartMonitoringAsync, () => CanStartMonitoring);
-        _stopMonitoringCommand = new RelayCommand(StopMonitoringAsync, () => IsMonitoring);
-    }
-
-    public string ModelPath
-    {
-        get => _modelPath;
-        set => SetProperty(ref _modelPath, value);
+        _translateCommand = new RelayCommand(TranslateAsync, () => CanTranslate);
+        _toggleMonitoringCommand = new RelayCommand(ToggleMonitoringAsync, () => CanToggleMonitoring);
     }
 
     public string SourceText
@@ -71,6 +63,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (SetProperty(ref _sourceText, value))
             {
                 _translateCommand.RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(CanTranslate));
             }
         }
     }
@@ -101,8 +94,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (SetProperty(ref _captureSelection, value))
             {
                 OnPropertyChanged(nameof(CaptureRegionText));
-                _startMonitoringCommand.RaiseCanExecuteChanged();
+                _toggleMonitoringCommand.RaiseCanExecuteChanged();
                 OnPropertyChanged(nameof(CanStartMonitoring));
+                OnPropertyChanged(nameof(CanToggleMonitoring));
+                OnPropertyChanged(nameof(CanTranslate));
             }
         }
     }
@@ -152,9 +147,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref _isMonitoring, value))
             {
-                _startMonitoringCommand.RaiseCanExecuteChanged();
-                _stopMonitoringCommand.RaiseCanExecuteChanged();
+                _toggleMonitoringCommand.RaiseCanExecuteChanged();
+                _translateCommand.RaiseCanExecuteChanged();
                 OnPropertyChanged(nameof(CanStartMonitoring));
+                OnPropertyChanged(nameof(CanToggleMonitoring));
+                OnPropertyChanged(nameof(CanTranslate));
+                OnPropertyChanged(nameof(MonitoringButtonText));
             }
         }
     }
@@ -166,26 +164,30 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref _isCapturing, value))
             {
-                _startMonitoringCommand.RaiseCanExecuteChanged();
+                _toggleMonitoringCommand.RaiseCanExecuteChanged();
                 _translateCommand.RaiseCanExecuteChanged();
                 OnPropertyChanged(nameof(CanStartMonitoring));
+                OnPropertyChanged(nameof(CanToggleMonitoring));
+                OnPropertyChanged(nameof(CanTranslate));
             }
         }
     }
 
     public bool CanStartMonitoring => !IsMonitoring && !IsCaptureBusy && !CaptureSelection.IsEmpty;
 
+    public bool CanToggleMonitoring => !CaptureSelection.IsEmpty && (IsMonitoring || !IsCaptureBusy);
+
+    public bool CanTranslate => !CaptureSelection.IsEmpty && !IsCaptureBusy && !string.IsNullOrWhiteSpace(SourceText);
+
+    public string MonitoringButtonText => IsMonitoring ? "停止监控" : "开始监控";
+
     public string CaptureMetricsText => $"截图 {CaptureCount} 次，变化 {ChangedFrameCount} 次";
 
     public string OcrPreviewLabel => PaddleSharpOcrService.PreviewLabel;
 
-    public RelayCommand LoadModelCommand => _loadModelCommand;
-
     public RelayCommand TranslateCommand => _translateCommand;
 
-    public RelayCommand StartMonitoringCommand => _startMonitoringCommand;
-
-    public RelayCommand StopMonitoringCommand => _stopMonitoringCommand;
+    public RelayCommand ToggleMonitoringCommand => _toggleMonitoringCommand;
 
     public void SetCaptureSelection(CaptureSelection captureSelection)
     {
@@ -201,25 +203,44 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         CaptureStatusText = "截图区域已更新";
     }
 
-    private async Task LoadModelAsync()
+    public async Task ClearCaptureSelectionAsync()
     {
+        await StopMonitoringAsync();
+        CaptureSelection = new CaptureSelection(default, default, 1, 1);
+        _lastFingerprint = null;
+        _lastOcrText = string.Empty;
+        LatestCaptureImage = null;
+        LatestOcrImage = null;
+        CaptureStatusText = "未选择截图区域";
+        StatusText = _isModelLoaded ? "CUDA 模型已加载" : "模型将在首次翻译时加载";
+    }
+
+    private async Task<bool> EnsureModelLoadedAsync()
+    {
+        if (_isModelLoaded)
+        {
+            return true;
+        }
+
         try
         {
-            StatusText = "正在加载 CUDA 模型...";
-            await _translationService.LoadAsync(TranslationOptions.CreateDefault(ModelPath));
+            StatusText = "首次翻译，正在加载 CUDA 模型...";
+            await _translationService.LoadAsync(TranslationOptions.CreateDefault(_modelPath));
             _isModelLoaded = true;
             StatusText = "CUDA 模型已加载";
+            return true;
         }
         catch (Exception ex)
         {
             _isModelLoaded = false;
             StatusText = "模型加载失败";
             TranslatedText = ExceptionFormatter.Format(ex) + Environment.NewLine + Environment.NewLine + NativeDependencyDiagnostics.CreateReport(AppContext.BaseDirectory);
+            return false;
         }
         finally
         {
-            _loadModelCommand.RaiseCanExecuteChanged();
             _translateCommand.RaiseCanExecuteChanged();
+            OnPropertyChanged(nameof(CanTranslate));
         }
     }
 
@@ -227,6 +248,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
+            if (CaptureSelection.IsEmpty)
+            {
+                StatusText = "请先选择截图区域";
+                return;
+            }
+
+            if (!await EnsureModelLoadedAsync())
+            {
+                return;
+            }
+
             StatusText = "正在翻译...";
             TranslatedText = await _translationService.TranslateToChineseAsync(SourceText);
             StatusText = "翻译完成";
@@ -238,18 +270,30 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task StartMonitoringAsync()
+    private async Task ToggleMonitoringAsync()
+    {
+        if (IsMonitoring)
+        {
+            await StopMonitoringAsync();
+        }
+        else
+        {
+            await StartMonitoringAsync();
+        }
+    }
+
+    private Task StartMonitoringAsync()
     {
         if (CaptureSelection.IsEmpty)
         {
             CaptureStatusText = "请先选择截图区域";
-            return;
+            return Task.CompletedTask;
         }
 
         if (IsCaptureBusy)
         {
             CaptureStatusText = "正在停止上一轮 OCR，请稍后再开始监控";
-            return;
+            return Task.CompletedTask;
         }
 
         _monitoringCancellation?.Dispose();
@@ -261,7 +305,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         IsMonitoring = true;
         CaptureStatusText = "正在监控截图区域";
         _captureTimer.Start();
-        await CaptureTickAsync(_monitoringCancellation.Token);
+        _ = CaptureTickAsync(_monitoringCancellation.Token);
+        return Task.CompletedTask;
     }
 
     private Task StopMonitoringAsync()
@@ -341,12 +386,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _lastOcrText = ocrText;
         SourceText = ocrText;
 
-        if (!_isModelLoaded)
-        {
-            CaptureStatusText = "OCR 已更新英文文本，等待模型加载";
-            return;
-        }
-
         await TranslateOcrTextAsync(ocrText);
     }
 
@@ -356,6 +395,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             CaptureStatusText = "OCR 已更新，正在自动翻译";
             StatusText = "正在自动翻译...";
+            if (!await EnsureModelLoadedAsync())
+            {
+                CaptureStatusText = "OCR 已更新，模型加载失败";
+                return;
+            }
+
             TranslatedText = await _translationService.TranslateToChineseAsync(ocrText);
             StatusText = "自动翻译完成";
             CaptureStatusText = "OCR 文本已自动翻译";

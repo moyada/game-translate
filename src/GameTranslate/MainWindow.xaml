@@ -58,31 +58,22 @@
 
     <Grid Grid.Row="1" Margin="0,0,0,18">
       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <TextBox Grid.Column="0"
-               Text="{Binding ModelPath, UpdateSourceTrigger=PropertyChanged}"
-               ToolTip="GGUF 模型路径" />
-      <Button Grid.Column="1"
-              Margin="12,0,0,0"
+      <Button Grid.Column="0"
               Content="选择区域"
               Click="SelectRegion_Click" />
+      <Button Grid.Column="1"
+              Margin="12,0,0,0"
+              Content="{Binding MonitoringButtonText}"
+              Command="{Binding ToggleMonitoringCommand}" />
       <Button Grid.Column="2"
               Margin="12,0,0,0"
-              Content="开始监控"
-              Command="{Binding StartMonitoringCommand}" />
-      <Button Grid.Column="3"
-              Margin="12,0,0,0"
-              Content="停止监控"
-              Command="{Binding StopMonitoringCommand}" />
-      <Button Grid.Column="4"
-              Margin="12,0,0,0"
-              Content="加载模型"
-              Command="{Binding LoadModelCommand}" />
+              Content="翻译"
+              Command="{Binding TranslateCommand}" />
     </Grid>
 
     <StackPanel Grid.Row="2"
@@ -113,9 +104,6 @@
 
       <DockPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,8">
         <TextBlock Text="识别到的英文" FontWeight="SemiBold" VerticalAlignment="Center" />
-        <Button DockPanel.Dock="Right"
-                Content="翻译"
-                Command="{Binding TranslateCommand}" />
       </DockPanel>
       <TextBox Grid.Column="0"
                Grid.Row="1"

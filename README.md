@@ -11,6 +11,7 @@ Windows 10 / Windows 11 x64 WPF app for translating selected game chat text with
 - Backend: `LLamaSharp.Backend.Cuda12.Windows`
 - CUDA runtime libraries: `NtvLibs.cuda12.cublas.runtime.win-x64`
 - OCR: PaddleOCR through PaddleSharp
+- Model loading: lazy-loaded on the first manual or automatic translation
 - CPU fallback: not supported in v1
 
 ## Requirements
@@ -118,7 +119,8 @@ dotnet publish src/GameTranslate/GameTranslate.csproj -c Release -r win-x64 --se
 
 The current build is the first integration slice:
 
-- Loads the local GGUF model through LLamaSharp.
+- Loads the local GGUF model through LLamaSharp only when translation is first requested.
+- Hides the GGUF model path from the UI and lazy-loads the model on the first translation.
 - Forces CUDA backend selection and disables native backend fallback.
 - Uses a topmost draggable selection box directly over the chat area.
 - The selection box has no confirm/cancel buttons. Region changes sync live while dragging.
@@ -129,7 +131,9 @@ The current build is the first integration slice:
 - Cancels the active monitoring session on stop and waits for any in-flight PaddleOCR run to finish before allowing a new monitoring session.
 - Shows the raw capture preview and the PaddleOCR input preview for tuning.
 - Runs PaddleOCR when the selected region changes, then writes recognized text into the source text box.
-- Automatically translates changed OCR text when the CUDA model is loaded.
+- Automatically lazy-loads the CUDA model and translates changed OCR text.
+- Uses one Start/Stop monitoring button. The monitoring and translation buttons stay visible but are disabled until a capture region exists.
+- Closing the selection overlay stops monitoring and clears the capture region so monitoring/translation become unavailable again.
 - Provides manual English input and Chinese translation output in WPF.
 - Shows model load failures directly in the UI.
 

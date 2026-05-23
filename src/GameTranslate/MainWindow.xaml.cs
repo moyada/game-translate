@@ -57,11 +57,15 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
-    private void SelectionOverlay_Closed(object? sender, EventArgs e)
+    private async void SelectionOverlay_Closed(object? sender, EventArgs e)
     {
         if (!_isClosing)
         {
             _selectionOverlay = null;
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.ClearCaptureSelectionAsync();
+            }
         }
     }
 }

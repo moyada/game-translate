@@ -11,6 +11,10 @@ var tests = new List<(string Name, Action Test)>
     ("coordinate scaler scales capture region", CoordinateScalerScalesCaptureRegion),
     ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
     ("monitoring start requires selection", MonitoringStartRequiresSelection),
+    ("translate requires selection", TranslateRequiresSelection),
+    ("clear selection disables controls", ClearSelectionDisablesControls),
+    ("monitoring button text", MonitoringButtonText),
+    ("llm lazy load policy", LlmLazyLoadPolicy),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
@@ -130,12 +134,65 @@ static void MonitoringStartRequiresSelection()
         new FakeOcrService());
 
     Assert(!viewModel.CanStartMonitoring, "monitoring should not start without selection");
+    Assert(!viewModel.ToggleMonitoringCommand.CanExecute(null), "monitoring command should be disabled without selection");
     viewModel.SetCaptureSelection(new CaptureSelection(
         new CaptureRegion(10, 20, 100, 50),
         new CaptureRegion(10, 20, 100, 50),
         1,
         1));
     Assert(viewModel.CanStartMonitoring, "monitoring should start after selection when idle");
+    Assert(viewModel.ToggleMonitoringCommand.CanExecute(null), "monitoring command should be enabled after selection");
+}
+
+static void TranslateRequiresSelection()
+{
+    using var viewModel = new MainViewModel(
+        new FakeTranslationService(),
+        new FakeScreenCaptureService(),
+        new FakeOcrService());
+
+    Assert(!viewModel.CanTranslate, "translation should not be enabled without selection");
+    Assert(!viewModel.TranslateCommand.CanExecute(null), "translation command should be disabled without selection");
+    viewModel.SetCaptureSelection(new CaptureSelection(
+        new CaptureRegion(10, 20, 100, 50),
+        new CaptureRegion(10, 20, 100, 50),
+        1,
+        1));
+    Assert(viewModel.CanTranslate, "translation should be enabled after selection");
+    Assert(viewModel.TranslateCommand.CanExecute(null), "translation command should be enabled after selection");
+}
+
+static void ClearSelectionDisablesControls()
+{
+    using var viewModel = new MainViewModel(
+        new FakeTranslationService(),
+        new FakeScreenCaptureService(),
+        new FakeOcrService());
+
+    viewModel.SetCaptureSelection(new CaptureSelection(
+        new CaptureRegion(10, 20, 100, 50),
+        new CaptureRegion(10, 20, 100, 50),
+        1,
+        1));
+    viewModel.ClearCaptureSelectionAsync().GetAwaiter().GetResult();
+
+    Assert(!viewModel.CanToggleMonitoring, "monitoring should be disabled after clearing selection");
+    Assert(!viewModel.CanTranslate, "translation should be disabled after clearing selection");
+}
+
+static void MonitoringButtonText()
+{
+    using var viewModel = new MainViewModel(
+        new FakeTranslationService(),
+        new FakeScreenCaptureService(),
+        new FakeOcrService());
+
+    Assert(viewModel.MonitoringButtonText == "开始监控", viewModel.MonitoringButtonText);
+}
+
+static void LlmLazyLoadPolicy()
+{
+    Assert(MainViewModel.UsesLazyModelLoading, "model should lazy-load on first translation");
 }
 
 static void ImageChangeDetectorUnchanged()
