@@ -121,12 +121,12 @@ The current build is the first integration slice:
 - Loads the local GGUF model through LLamaSharp.
 - Forces CUDA backend selection and disables native backend fallback.
 - Uses a full-screen draggable selection box directly over the chat area.
-- Keeps the selection box visible while monitoring, and updates the capture region as the box moves.
+- Keeps the selection box visible while selecting; pressing Confirm or Enter saves the region and closes the topmost selection window so it does not block the game/app.
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Preprocesses colored game chat text into high-contrast black text on white background before OCR.
-- Can switch OCR backend between Windows OCR and PaddleOCR. PaddleOCR uses the original color capture and upscales it before recognition, which is better for very small colored game chat text.
-- Shows both the raw capture preview and the OCR preprocessing preview for tuning.
+- Can switch OCR backend between Windows OCR and PaddleOCR. PaddleOCR uses the original color capture without color preprocessing, then upscales it before recognition, which is better for very small colored game chat text.
+- Shows the raw capture preview and the actual OCR input preview for tuning. Windows OCR shows the high-contrast preprocessing image; PaddleOCR shows the original color input.
 - Runs Windows OCR when the selected region changes, then writes recognized text into the source text box.
 - Automatically translates changed OCR text when the CUDA model is loaded.
 - Provides manual English input and Chinese translation output in WPF.

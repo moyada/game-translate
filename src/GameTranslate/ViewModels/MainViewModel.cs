@@ -180,10 +180,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             }
 
             ReplaceOcrService(value.Backend);
+            OnPropertyChanged(nameof(OcrPreviewLabel));
         }
     }
 
     public bool IsOcrBackendSelectionEnabled => !IsMonitoring && !_isCapturing;
+
+    public string OcrPreviewLabel => SelectedOcrBackendChoice.PreviewLabel;
 
     public RelayCommand LoadModelCommand => _loadModelCommand;
 
@@ -286,7 +289,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             _lastFingerprint = fingerprint;
             LatestCaptureImage = frame.Preview;
-            LatestOcrImage = OcrPreviewBuilder.CreatePreview(frame);
+            LatestOcrImage = SelectedOcrBackendChoice.UsesColorPreprocessing
+                ? OcrPreviewBuilder.CreatePreview(frame)
+                : frame.Preview;
             CaptureCount++;
 
             if (changed)

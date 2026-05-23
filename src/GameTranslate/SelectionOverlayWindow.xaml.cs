@@ -234,8 +234,7 @@ public partial class SelectionOverlayWindow : Window
 
     private void Confirm_Click(object sender, RoutedEventArgs e)
     {
-        SelectedRegion = CurrentRegion;
-        RaiseSelectionChanged();
+        ConfirmSelection();
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -251,8 +250,18 @@ public partial class SelectionOverlayWindow : Window
         }
         else if (e.Key == WpfKey.Enter)
         {
-            SelectedRegion = CurrentRegion;
-            RaiseSelectionChanged();
+            ConfirmSelection();
+        }
+    }
+
+    private void ConfirmSelection()
+    {
+        SelectedRegion = CurrentRegion;
+        RaiseSelectionChanged();
+
+        if (SelectionOverlayBehavior.CloseOnConfirm)
+        {
+            Close();
         }
     }
 

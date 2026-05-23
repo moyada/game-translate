@@ -16,7 +16,9 @@ var tests = new List<(string Name, Action Test)>
     ("ocr preprocessor output stride", OcrPreprocessorOutputStride),
     ("ocr backend choices", OcrBackendChoices),
     ("ocr backend default", OcrBackendDefault),
+    ("ocr backend preprocessing policy", OcrBackendPreprocessingPolicy),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
+    ("selection overlay confirm closes", SelectionOverlayConfirmCloses),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
@@ -195,8 +197,10 @@ static void OcrBackendChoices()
     Assert(choices.Count == 2, $"expected 2 choices, got {choices.Count}");
     Assert(choices[0].Backend == OcrBackend.Windows, "Windows OCR should be first/default");
     Assert(choices[0].DisplayName == "Windows OCR", choices[0].DisplayName);
+    Assert(choices[0].PreviewLabel == "OCR 预处理预览", choices[0].PreviewLabel);
     Assert(choices[1].Backend == OcrBackend.PaddleSharp, "PaddleOCR option missing");
     Assert(choices[1].DisplayName == "PaddleOCR", choices[1].DisplayName);
+    Assert(choices[1].PreviewLabel == "PaddleOCR 输入预览", choices[1].PreviewLabel);
 }
 
 static void OcrBackendDefault()
@@ -204,9 +208,20 @@ static void OcrBackendDefault()
     Assert(OcrBackendCatalog.DefaultBackend == OcrBackend.Windows, "default OCR backend should stay Windows OCR");
 }
 
+static void OcrBackendPreprocessingPolicy()
+{
+    Assert(OcrBackendCatalog.Choices[0].UsesColorPreprocessing, "Windows OCR should use color preprocessing");
+    Assert(!OcrBackendCatalog.Choices[1].UsesColorPreprocessing, "PaddleOCR should use original color capture");
+}
+
 static void PaddleOcrUpscaleFactor()
 {
     Assert(PaddleSharpOcrService.InputScaleFactor == 3.0, "PaddleOCR should upscale small game text");
+}
+
+static void SelectionOverlayConfirmCloses()
+{
+    Assert(SelectionOverlayBehavior.CloseOnConfirm, "confirm should close overlay so it does not block other operations");
 }
 
 static void OcrTextNormalizerTrimsAndDropsBlankLines()

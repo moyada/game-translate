@@ -1,3 +1,8 @@
 namespace GameTranslate.Services;
 
-public sealed record OcrBackendChoice(OcrBackend Backend, string DisplayName, string Description);
+public sealed record OcrBackendChoice(
+    OcrBackend Backend,
+    string DisplayName,
+    string Description,
+    bool UsesColorPreprocessing,
+    string PreviewLabel);

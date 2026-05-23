@@ -7,7 +7,7 @@
 - Model: `unsloth/Qwen3-1.7B-GGUF:UD-Q4_K_XL`.
 - Runtime: LLamaSharp in-process inference.
 - Backend: `LLamaSharp.Backend.Cuda12.Windows`.
-- OCR: switchable `IOcrService` backend. Windows OCR remains the default; PaddleSharp/PaddleOCR is available for small colored chat text.
+- OCR: switchable `IOcrService` backend. Windows OCR remains the default; PaddleSharp/PaddleOCR is available for small colored chat text and uses the original color capture without color preprocessing.
 - CPU fallback: not supported.
 
 ## Pipeline
