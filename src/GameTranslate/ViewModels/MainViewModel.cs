@@ -15,6 +15,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly RelayCommand _translateCommand;
     private readonly RelayCommand _startMonitoringCommand;
     private readonly RelayCommand _stopMonitoringCommand;
+    private CancellationTokenSource? _monitoringCancellation;
     private string _modelPath;
     private string _sourceText = "hello, team. the boss is spawning near the bridge.";
     private string _translatedText = string.Empty;
@@ -48,11 +49,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             Interval = TimeSpan.FromMilliseconds(200)
         };
-        _captureTimer.Tick += async (_, _) => await CaptureTickAsync();
+        _captureTimer.Tick += async (_, _) => await CaptureTickAsync(_monitoringCancellation?.Token ?? CancellationToken.None);
         _modelPath = ModelPathResolver.GetDefaultModelPath(AppContext.BaseDirectory);
         _loadModelCommand = new RelayCommand(LoadModelAsync, () => !_isModelLoaded);
-        _translateCommand = new RelayCommand(TranslateAsync, () => _isModelLoaded && !string.IsNullOrWhiteSpace(SourceText));
-        _startMonitoringCommand = new RelayCommand(StartMonitoringAsync, () => !IsMonitoring && !CaptureSelection.IsEmpty);
+        _translateCommand = new RelayCommand(TranslateAsync, () => _isModelLoaded && !IsCaptureBusy && !string.IsNullOrWhiteSpace(SourceText));
+        _startMonitoringCommand = new RelayCommand(StartMonitoringAsync, () => CanStartMonitoring);
         _stopMonitoringCommand = new RelayCommand(StopMonitoringAsync, () => IsMonitoring);
     }
 
@@ -101,6 +102,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 OnPropertyChanged(nameof(CaptureRegionText));
                 _startMonitoringCommand.RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(CanStartMonitoring));
             }
         }
     }
@@ -152,9 +154,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 _startMonitoringCommand.RaiseCanExecuteChanged();
                 _stopMonitoringCommand.RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(CanStartMonitoring));
             }
         }
     }
+
+    public bool IsCaptureBusy
+    {
+        get => _isCapturing;
+        private set
+        {
+            if (SetProperty(ref _isCapturing, value))
+            {
+                _startMonitoringCommand.RaiseCanExecuteChanged();
+                _translateCommand.RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(CanStartMonitoring));
+            }
+        }
+    }
+
+    public bool CanStartMonitoring => !IsMonitoring && !IsCaptureBusy && !CaptureSelection.IsEmpty;
 
     public string CaptureMetricsText => $"截图 {CaptureCount} 次，变化 {ChangedFrameCount} 次";
 
@@ -227,6 +246,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        if (IsCaptureBusy)
+        {
+            CaptureStatusText = "正在停止上一轮 OCR，请稍后再开始监控";
+            return;
+        }
+
+        _monitoringCancellation?.Dispose();
+        _monitoringCancellation = new CancellationTokenSource();
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
         CaptureCount = 0;
@@ -234,28 +261,31 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         IsMonitoring = true;
         CaptureStatusText = "正在监控截图区域";
         _captureTimer.Start();
-        await CaptureTickAsync();
+        await CaptureTickAsync(_monitoringCancellation.Token);
     }
 
     private Task StopMonitoringAsync()
     {
         _captureTimer.Stop();
+        _monitoringCancellation?.Cancel();
         IsMonitoring = false;
-        CaptureStatusText = "截图监控已停止";
+        CaptureStatusText = IsCaptureBusy ? "正在停止，等待当前 PaddleOCR 结束" : "截图监控已停止";
         return Task.CompletedTask;
     }
 
-    private async Task CaptureTickAsync()
+    private async Task CaptureTickAsync(CancellationToken cancellationToken)
     {
-        if (!IsMonitoring || _isCapturing)
+        if (!IsMonitoring || IsCaptureBusy || cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        _isCapturing = true;
+        IsCaptureBusy = true;
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var frame = await Task.Run(() => _screenCaptureService.Capture(CaptureSelection.PixelRegion));
+            cancellationToken.ThrowIfCancellationRequested();
             var fingerprint = ImageChangeDetector.CreateFingerprint(frame.BgraPixels, frame.Width, frame.Height, frame.Stride);
             var changed = ImageChangeDetector.HasMeaningfulChange(_lastFingerprint, fingerprint);
 
@@ -267,12 +297,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (changed)
             {
                 ChangedFrameCount++;
-                await RunOcrAsync(frame);
+                await RunOcrAsync(frame, cancellationToken);
             }
             else
             {
                 CaptureStatusText = "区域无变化，等待";
             }
+        }
+        catch (OperationCanceledException)
+        {
+            CaptureStatusText = "截图监控已停止";
         }
         catch (Exception ex)
         {
@@ -282,14 +316,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
         finally
         {
-            _isCapturing = false;
+            IsCaptureBusy = false;
         }
     }
 
-    private async Task RunOcrAsync(CapturedFrame frame)
+    private async Task RunOcrAsync(CapturedFrame frame, CancellationToken cancellationToken)
     {
         CaptureStatusText = "检测到区域变化，正在 PaddleOCR";
-        var ocrText = await _ocrService.RecognizeTextAsync(frame);
+        var ocrText = await _ocrService.RecognizeTextAsync(frame, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(ocrText))
         {
@@ -336,6 +371,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _captureTimer.Stop();
+        _monitoringCancellation?.Cancel();
+        _monitoringCancellation?.Dispose();
         if (_translationService is IDisposable disposable)
         {
             disposable.Dispose();
@@ -343,6 +380,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         DisposeOcrService(_ocrService);
     }
+
     private static void DisposeOcrService(IOcrService service)
     {
         if (service is IDisposable disposable)

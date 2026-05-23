@@ -19,6 +19,8 @@
 5. `CudaLlamaTranslationService` translates English text to Simplified Chinese.
 6. The WPF overlay/main window shows the latest translated result.
 
+Stopping monitoring cancels the active monitoring session. If PaddleOCR is already inside a native predictor run, the app waits for that run to return before allowing a new monitoring session. PaddleOCR calls are serialized, and the OCR engine is recreated after native predictor failures.
+
 ## Current Build
 
 The current implementation completes the local model loading, manual text translation path, draggable region selection, selected-region screenshot capture, 200 ms image change detection, PaddleOCR text extraction, and automatic LLM translation when the model is loaded. Result overlay presentation and OCR tuning are the next modules to add.

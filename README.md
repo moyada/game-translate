@@ -125,6 +125,7 @@ The current build is the first integration slice:
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Uses PaddleOCR on the original color capture without color preprocessing, then upscales it before recognition.
+- Cancels the active monitoring session on stop and waits for any in-flight PaddleOCR run to finish before allowing a new monitoring session.
 - Shows the raw capture preview and the PaddleOCR input preview for tuning.
 - Runs PaddleOCR when the selected region changes, then writes recognized text into the source text box.
 - Automatically translates changed OCR text when the CUDA model is loaded.

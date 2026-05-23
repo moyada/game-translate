@@ -14,10 +14,14 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 
     public const double InputScaleFactor = 3.0;
 
-    private readonly Lazy<PaddleOcrAll> _ocr = new(CreateOcr);
+    public const bool RecreatesEngineAfterFailure = true;
+
+    private readonly SemaphoreSlim _recognizeLock = new(1, 1);
+    private readonly object _ocrSync = new();
+    private PaddleOcrAll? _ocr;
     private bool _disposed;
 
-    public Task<string> RecognizeTextAsync(CapturedFrame frame, CancellationToken cancellationToken = default)
+    public async Task<string> RecognizeTextAsync(CapturedFrame frame, CancellationToken cancellationToken = default)
     {
         if (_disposed)
         {
@@ -26,10 +30,27 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 
         if (frame.Width <= 0 || frame.Height <= 0 || frame.BgraPixels.Length == 0)
         {
-            return Task.FromResult(string.Empty);
+            return string.Empty;
         }
 
-        return Task.Run(() => RecognizeText(frame, cancellationToken), cancellationToken);
+        await _recognizeLock.WaitAsync(cancellationToken);
+        try
+        {
+            return await Task.Run(() => RecognizeText(frame, cancellationToken), cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            ResetOcrEngine();
+            throw new InvalidOperationException("PaddleOCR 识别失败，已重置 OCR 引擎。请重新开始监控。", ex);
+        }
+        finally
+        {
+            _recognizeLock.Release();
+        }
     }
 
     public void Dispose()
@@ -39,11 +60,8 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
             return;
         }
 
-        if (_ocr.IsValueCreated)
-        {
-            _ocr.Value.Dispose();
-        }
-
+        ResetOcrEngine();
+        _recognizeLock.Dispose();
         _disposed = true;
     }
 
@@ -67,8 +85,28 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         Cv2.Resize(bgr, enlarged, new CvSize(), InputScaleFactor, InputScaleFactor, InterpolationFlags.Cubic);
 
         cancellationToken.ThrowIfCancellationRequested();
-        var result = _ocr.Value.Run(enlarged);
+        var result = GetOrCreateOcr().Run(enlarged);
+        cancellationToken.ThrowIfCancellationRequested();
         return OcrTextNormalizer.NormalizeLines(SplitLines(result.Text));
+    }
+
+    private PaddleOcrAll GetOrCreateOcr()
+    {
+        lock (_ocrSync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            _ocr ??= CreateOcr();
+            return _ocr;
+        }
+    }
+
+    private void ResetOcrEngine()
+    {
+        lock (_ocrSync)
+        {
+            _ocr?.Dispose();
+            _ocr = null;
+        }
     }
 
     private static Mat CreateBgraMat(CapturedFrame frame)

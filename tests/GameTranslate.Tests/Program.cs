@@ -1,5 +1,6 @@
 using GameTranslate.Services;
 using GameTranslate.Models;
+using GameTranslate.ViewModels;
 
 var tests = new List<(string Name, Action Test)>
 {
@@ -9,10 +10,12 @@ var tests = new List<(string Name, Action Test)>
     ("capture region display", CaptureRegionDisplay),
     ("coordinate scaler scales capture region", CoordinateScalerScalesCaptureRegion),
     ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
+    ("monitoring start requires selection", MonitoringStartRequiresSelection),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
+    ("paddle ocr recreates engine after failure", PaddleOcrRecreatesEngineAfterFailure),
     ("selection overlay confirm closes", SelectionOverlayConfirmCloses),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
@@ -119,6 +122,22 @@ static void CaptureSelectionDisplayIncludesScale()
     Assert(text.Contains("缩放 150% x 150%", StringComparison.Ordinal), text);
 }
 
+static void MonitoringStartRequiresSelection()
+{
+    using var viewModel = new MainViewModel(
+        new FakeTranslationService(),
+        new FakeScreenCaptureService(),
+        new FakeOcrService());
+
+    Assert(!viewModel.CanStartMonitoring, "monitoring should not start without selection");
+    viewModel.SetCaptureSelection(new CaptureSelection(
+        new CaptureRegion(10, 20, 100, 50),
+        new CaptureRegion(10, 20, 100, 50),
+        1,
+        1));
+    Assert(viewModel.CanStartMonitoring, "monitoring should start after selection when idle");
+}
+
 static void ImageChangeDetectorUnchanged()
 {
     var pixels = CreateBgraPixels(32, 32, 40, 50, 60);
@@ -162,6 +181,11 @@ static void PaddleOcrPreviewLabel()
 static void PaddleOcrUpscaleFactor()
 {
     Assert(PaddleSharpOcrService.InputScaleFactor == 3.0, "PaddleOCR should upscale small game text");
+}
+
+static void PaddleOcrRecreatesEngineAfterFailure()
+{
+    Assert(PaddleSharpOcrService.RecreatesEngineAfterFailure, "PaddleOCR engine should reset after native predictor failures");
 }
 
 static void SelectionOverlayConfirmCloses()
@@ -248,5 +272,36 @@ static void Assert(bool condition, string message)
     if (!condition)
     {
         throw new InvalidOperationException(message);
+    }
+}
+
+internal sealed class FakeTranslationService : ITranslationService
+{
+    public bool IsLoaded => true;
+
+    public Task LoadAsync(TranslationOptions options, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<string> TranslateToChineseAsync(string text, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(text);
+    }
+}
+
+internal sealed class FakeScreenCaptureService : IScreenCaptureService
+{
+    public CapturedFrame Capture(CaptureRegion region)
+    {
+        throw new NotSupportedException("not used by this test");
+    }
+}
+
+internal sealed class FakeOcrService : IOcrService
+{
+    public Task<string> RecognizeTextAsync(CapturedFrame frame, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(string.Empty);
     }
 }
