@@ -2,8 +2,6 @@ namespace GameTranslate.Services;
 
 public static class OcrImagePreprocessor
 {
-    private const int TextDilationRadius = 1;
-
     public static byte[] CreateHighContrastBgra(byte[] sourceBgra, int width, int height, int stride)
     {
         if (width <= 0 || height <= 0)
@@ -37,7 +35,7 @@ public static class OcrImagePreprocessor
             var rowOffset = y * outputStride;
             for (var x = 0; x < width; x++)
             {
-                var isText = HasTextNeighbor(textMask, width, height, x, y);
+                var isText = textMask[y * width + x];
                 var value = isText ? (byte)0 : (byte)255;
                 var offset = rowOffset + x * 4;
                 output[offset] = value;
@@ -62,36 +60,9 @@ public static class OcrImagePreprocessor
         var saturation = max - min;
         var luminance = (red * 299 + green * 587 + blue * 114) / 1000;
 
-        var saturatedGameText = saturation >= 35 && max >= 90 && luminance >= 45;
-        var brightText = luminance >= 190 && saturation <= 80;
-        return saturatedGameText || brightText;
-    }
-
-    private static bool HasTextNeighbor(bool[] textMask, int width, int height, int x, int y)
-    {
-        for (var dy = -TextDilationRadius; dy <= TextDilationRadius; dy++)
-        {
-            var sampleY = y + dy;
-            if (sampleY < 0 || sampleY >= height)
-            {
-                continue;
-            }
-
-            for (var dx = -TextDilationRadius; dx <= TextDilationRadius; dx++)
-            {
-                var sampleX = x + dx;
-                if (sampleX < 0 || sampleX >= width)
-                {
-                    continue;
-                }
-
-                if (textMask[sampleY * width + sampleX])
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        var yellowNoticeText = red >= 150 && green >= 145 && blue <= 95 && saturation >= 55 && luminance >= 120;
+        var magentaChatText = red >= 95 && blue >= 80 && green <= 95 && red > green + 35 && blue > green + 20 && saturation >= 45;
+        var cyanIconOrUi = blue >= 150 && green >= 120 && red <= 120;
+        return (yellowNoticeText || magentaChatText) && !cyanIconOrUi;
     }
 }

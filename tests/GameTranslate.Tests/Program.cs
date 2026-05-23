@@ -159,26 +159,26 @@ static void OcrPreprocessorDetectsColoredText()
     Assert(OcrImagePreprocessor.IsLikelyTextPixel(210, 210, 20), "yellow notice text should be treated as text");
     Assert(OcrImagePreprocessor.IsLikelyTextPixel(165, 35, 130), "magenta chat text should be treated as text");
     Assert(!OcrImagePreprocessor.IsLikelyTextPixel(130, 130, 130), "gray chat background should not be treated as text");
+    Assert(!OcrImagePreprocessor.IsLikelyTextPixel(220, 220, 220), "bright border should not be treated as text");
+    Assert(!OcrImagePreprocessor.IsLikelyTextPixel(70, 170, 210), "cyan UI icon should not be treated as text");
 }
 
 static void OcrPreprocessorConvertsColoredTextToBlack()
 {
-    const int width = 5;
-    const int height = 5;
+    const int width = 3;
+    const int height = 3;
     var pixels = CreateBgraPixels(width, height, 130, 130, 130);
-    var centerOffset = (2 * width + 2) * 4;
+    var centerOffset = (1 * width + 1) * 4;
     pixels[centerOffset] = 20;
     pixels[centerOffset + 1] = 210;
     pixels[centerOffset + 2] = 210;
     pixels[centerOffset + 3] = 255;
 
     var processed = OcrImagePreprocessor.CreateHighContrastBgra(pixels, width, height, width * 4);
-    var farBackgroundOffset = 0;
-
     Assert(processed[centerOffset] == 0, "text blue channel should be black");
     Assert(processed[centerOffset + 1] == 0, "text green channel should be black");
     Assert(processed[centerOffset + 2] == 0, "text red channel should be black");
-    Assert(processed[farBackgroundOffset] == 255, "background should be white");
+    Assert(processed[0] == 255, "background should be white");
 }
 
 static void OcrPreprocessorOutputStride()
