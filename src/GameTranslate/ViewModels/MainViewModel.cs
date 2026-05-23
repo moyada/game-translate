@@ -161,6 +161,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public void SetCaptureSelection(CaptureSelection captureSelection)
     {
+        if (CaptureSelection == captureSelection)
+        {
+            return;
+        }
+
         CaptureSelection = captureSelection;
         _lastFingerprint = null;
         _lastOcrText = string.Empty;

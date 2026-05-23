@@ -49,6 +49,8 @@ public partial class SelectionOverlayWindow : Window
         _screenScaleX,
         _screenScaleY);
 
+    public event EventHandler<CaptureSelection>? SelectionChanged;
+
     private CaptureRegion CurrentRegion
     {
         get
@@ -192,6 +194,7 @@ public partial class SelectionOverlayWindow : Window
         SelectionBorder.Height = selectionHeight;
 
         SelectedRegion = CurrentRegion;
+        RaiseSelectionChanged();
         UpdateHandles();
     }
 
@@ -232,24 +235,24 @@ public partial class SelectionOverlayWindow : Window
     private void Confirm_Click(object sender, RoutedEventArgs e)
     {
         SelectedRegion = CurrentRegion;
-        DialogResult = true;
+        RaiseSelectionChanged();
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = false;
+        Close();
     }
 
     private void Window_KeyDown(object sender, WpfKeyEventArgs e)
     {
         if (e.Key == WpfKey.Escape)
         {
-            DialogResult = false;
+            Close();
         }
         else if (e.Key == WpfKey.Enter)
         {
             SelectedRegion = CurrentRegion;
-            DialogResult = true;
+            RaiseSelectionChanged();
         }
     }
 
@@ -263,6 +266,13 @@ public partial class SelectionOverlayWindow : Window
 
         _screenScaleX = source.CompositionTarget.TransformToDevice.M11;
         _screenScaleY = source.CompositionTarget.TransformToDevice.M22;
+        RaiseSelectionChanged();
+        UpdateHandles();
+    }
+
+    private void RaiseSelectionChanged()
+    {
+        SelectionChanged?.Invoke(this, SelectedCaptureSelection);
     }
 
     private enum DragMode

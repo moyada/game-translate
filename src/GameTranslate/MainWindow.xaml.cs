@@ -5,6 +5,9 @@ namespace GameTranslate;
 
 public partial class MainWindow : Window
 {
+    private SelectionOverlayWindow? _selectionOverlay;
+    private bool _isClosing;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -18,24 +21,47 @@ public partial class MainWindow : Window
             return;
         }
 
-        var overlay = new SelectionOverlayWindow(viewModel.CaptureSelection.DisplayRegion)
+        if (_selectionOverlay is { IsVisible: true })
+        {
+            _selectionOverlay.Activate();
+            return;
+        }
+
+        _selectionOverlay = new SelectionOverlayWindow(viewModel.CaptureSelection.DisplayRegion)
         {
             Owner = this
         };
-
-        if (overlay.ShowDialog() == true)
-        {
-            viewModel.SetCaptureSelection(overlay.SelectedCaptureSelection);
-        }
+        _selectionOverlay.SelectionChanged += (_, selection) => viewModel.SetCaptureSelection(selection);
+        _selectionOverlay.Closed += SelectionOverlay_Closed;
+        _selectionOverlay.Show();
+        viewModel.SetCaptureSelection(_selectionOverlay.SelectedCaptureSelection);
     }
 
     protected override void OnClosed(EventArgs e)
+    {
+        _isClosing = true;
+        _selectionOverlay?.Close();
+        _selectionOverlay = null;
+        base.OnClosed(e);
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
         if (DataContext is IDisposable disposable)
         {
             disposable.Dispose();
         }
 
-        base.OnClosed(e);
+        _isClosing = true;
+
+        base.OnClosing(e);
+    }
+
+    private void SelectionOverlay_Closed(object? sender, EventArgs e)
+    {
+        if (!_isClosing)
+        {
+            _selectionOverlay = null;
+        }
     }
 }

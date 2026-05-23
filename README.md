@@ -120,6 +120,7 @@ The current build is the first integration slice:
 - Loads the local GGUF model through LLamaSharp.
 - Forces CUDA backend selection and disables native backend fallback.
 - Uses a full-screen draggable selection box directly over the chat area.
+- Keeps the selection box visible while monitoring, and updates the capture region as the box moves.
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Preprocesses colored game chat text into high-contrast black text on white background before OCR.
