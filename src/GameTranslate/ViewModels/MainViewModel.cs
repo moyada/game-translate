@@ -22,6 +22,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _captureStatusText = "截图监控未开始";
     private CaptureSelection _captureSelection = new(default, default, 1, 1);
     private ImageSource? _latestCaptureImage;
+    private ImageSource? _latestOcrImage;
     private ImageFingerprint? _lastFingerprint;
     private string _lastOcrText = string.Empty;
     private int _captureCount;
@@ -110,6 +111,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         get => _latestCaptureImage;
         set => SetProperty(ref _latestCaptureImage, value);
+    }
+
+    public ImageSource? LatestOcrImage
+    {
+        get => _latestOcrImage;
+        set => SetProperty(ref _latestOcrImage, value);
     }
 
     public int CaptureCount
@@ -252,6 +259,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             _lastFingerprint = fingerprint;
             LatestCaptureImage = frame.Preview;
+            LatestOcrImage = OcrPreviewBuilder.CreatePreview(frame);
             CaptureCount++;
 
             if (changed)

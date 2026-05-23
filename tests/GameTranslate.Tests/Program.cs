@@ -13,6 +13,7 @@ var tests = new List<(string Name, Action Test)>
     ("image change detector changed", ImageChangeDetectorChanged),
     ("ocr preprocessor detects colored text", OcrPreprocessorDetectsColoredText),
     ("ocr preprocessor converts colored text to black", OcrPreprocessorConvertsColoredTextToBlack),
+    ("ocr preprocessor output stride", OcrPreprocessorOutputStride),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
@@ -178,6 +179,11 @@ static void OcrPreprocessorConvertsColoredTextToBlack()
     Assert(processed[centerOffset + 1] == 0, "text green channel should be black");
     Assert(processed[centerOffset + 2] == 0, "text red channel should be black");
     Assert(processed[farBackgroundOffset] == 255, "background should be white");
+}
+
+static void OcrPreprocessorOutputStride()
+{
+    Assert(OcrImagePreprocessor.GetOutputStride(17) == 68, "stride should be width * 4");
 }
 
 static void OcrTextNormalizerTrimsAndDropsBlankLines()

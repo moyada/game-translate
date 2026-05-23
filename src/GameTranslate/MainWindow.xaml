@@ -135,6 +135,8 @@
           <RowDefinition Height="2*" />
           <RowDefinition Height="Auto" />
           <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <TextBox Grid.Row="0"
                  Text="{Binding TranslatedText}"
@@ -152,6 +154,17 @@
                 BorderBrush="#D1D5DB"
                 BorderThickness="1">
           <Image Source="{Binding LatestCaptureImage}"
+                 Stretch="Uniform" />
+        </Border>
+        <TextBlock Grid.Row="3"
+                   Text="OCR 预处理预览"
+                   FontWeight="SemiBold"
+                   Margin="0,12,0,8" />
+        <Border Grid.Row="4"
+                Background="White"
+                BorderBrush="#D1D5DB"
+                BorderThickness="1">
+          <Image Source="{Binding LatestOcrImage}"
                  Stretch="Uniform" />
         </Border>
       </Grid>

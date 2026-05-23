@@ -50,6 +50,11 @@ public static class OcrImagePreprocessor
         return output;
     }
 
+    public static int GetOutputStride(int width)
+    {
+        return width * 4;
+    }
+
     public static bool IsLikelyTextPixel(byte red, byte green, byte blue)
     {
         var max = Math.Max(red, Math.Max(green, blue));
@@ -90,4 +95,3 @@ public static class OcrImagePreprocessor
         return false;
     }
 }
-

@@ -124,6 +124,7 @@ The current build is the first integration slice:
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Preprocesses colored game chat text into high-contrast black text on white background before OCR.
+- Shows both the raw capture preview and the OCR preprocessing preview for tuning.
 - Runs Windows OCR when the selected region changes, then writes recognized text into the source text box.
 - Automatically translates changed OCR text when the CUDA model is loaded.
 - Provides manual English input and Chinese translation output in WPF.
