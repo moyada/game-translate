@@ -10,6 +10,7 @@ var tests = new List<(string Name, Action Test)>
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
+    ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("translation options", TranslationOptionsDefaults),
     ("prompt content", PromptContent),
     ("blank prompt", BlankPrompt)
@@ -133,6 +134,18 @@ static void OcrTextNormalizerTrimsAndDropsBlankLines()
     });
 
     Assert(text == $"hello team{Environment.NewLine}push mid", text);
+}
+
+static void ExceptionFormatterIncludesInnerException()
+{
+    var exception = new InvalidOperationException(
+        "outer",
+        new FileNotFoundException("missing native dll", "llama.dll"));
+
+    var text = ExceptionFormatter.Format(exception);
+    Assert(text.Contains("System.InvalidOperationException: outer", StringComparison.Ordinal), text);
+    Assert(text.Contains("System.IO.FileNotFoundException: missing native dll", StringComparison.Ordinal), text);
+    Assert(text.Contains("File: llama.dll", StringComparison.Ordinal), text);
 }
 
 static void PromptContent()

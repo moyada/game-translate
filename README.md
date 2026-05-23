@@ -62,6 +62,18 @@ dotnet restore
 dotnet build src/GameTranslate/GameTranslate.csproj -c Release -p:Platform=x64
 ```
 
+## Native CUDA Diagnostics
+
+If model loading shows `The type initializer for 'LLama.Native.NativeApi' threw an exception.`, the real cause is usually in the inner exception. The app prints the full inner exception chain and lists the LLamaSharp native DLLs found in the output folder.
+
+Check the output folder:
+
+```powershell
+dir src\GameTranslate\bin\x64\Release\net8.0-windows10.0.19041.0 -Recurse -Filter *.dll | findstr /i "llama ggml cuda"
+```
+
+Expected files include `llama.dll`, `ggml.dll`, `ggml-base.dll`, `ggml-cpu.dll`, and `ggml-cuda.dll`.
+
 ## Test
 
 ```powershell

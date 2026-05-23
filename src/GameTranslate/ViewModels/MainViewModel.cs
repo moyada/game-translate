@@ -181,7 +181,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             _isModelLoaded = false;
             StatusText = "模型加载失败";
-            TranslatedText = ex.Message;
+            TranslatedText = ExceptionFormatter.Format(ex) + Environment.NewLine + Environment.NewLine + NativeDependencyDiagnostics.CreateReport(AppContext.BaseDirectory);
         }
         finally
         {
@@ -201,7 +201,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             StatusText = "翻译失败";
-            TranslatedText = ex.Message;
+            TranslatedText = ExceptionFormatter.Format(ex);
         }
     }
 
@@ -263,7 +263,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             _captureTimer.Stop();
             IsMonitoring = false;
-            CaptureStatusText = ex.Message;
+            CaptureStatusText = ExceptionFormatter.Format(ex);
         }
         finally
         {
@@ -313,7 +313,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             StatusText = "自动翻译失败";
-            TranslatedText = ex.Message;
+            TranslatedText = ExceptionFormatter.Format(ex);
             CaptureStatusText = "OCR 已更新，自动翻译失败";
         }
     }
