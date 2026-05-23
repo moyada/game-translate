@@ -9,7 +9,7 @@ public static class WindowsNativeLibrarySearchPath
 
     public static void AddNativeDllDirectories(string appBaseDirectory)
     {
-        if (!OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows() || !Directory.Exists(appBaseDirectory))
         {
             return;
         }
@@ -36,4 +36,3 @@ public static class WindowsNativeLibrarySearchPath
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern nint AddDllDirectory(string newDirectory);
 }
-
