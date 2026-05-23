@@ -9,7 +9,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private readonly ITranslationService _translationService;
     private readonly IScreenCaptureService _screenCaptureService;
-    private readonly IOcrService _ocrService;
+    private IOcrService _ocrService;
     private readonly DispatcherTimer _captureTimer;
     private readonly RelayCommand _loadModelCommand;
     private readonly RelayCommand _translateCommand;
@@ -21,6 +21,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _statusText = "模型未加载";
     private string _captureStatusText = "截图监控未开始";
     private CaptureSelection _captureSelection = new(default, default, 1, 1);
+    private OcrBackendChoice _selectedOcrBackendChoice = OcrBackendCatalog.DefaultChoice;
     private ImageSource? _latestCaptureImage;
     private ImageSource? _latestOcrImage;
     private ImageFingerprint? _lastFingerprint;
@@ -32,7 +33,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isCapturing;
 
     public MainViewModel()
-        : this(new CudaLlamaTranslationService(), new ScreenCaptureService(), new WindowsOcrService())
+        : this(new CudaLlamaTranslationService(), new ScreenCaptureService(), OcrServiceFactory.Create(OcrBackendCatalog.DefaultBackend))
     {
     }
 
@@ -152,11 +153,37 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 _startMonitoringCommand.RaiseCanExecuteChanged();
                 _stopMonitoringCommand.RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(IsOcrBackendSelectionEnabled));
             }
         }
     }
 
     public string CaptureMetricsText => $"截图 {CaptureCount} 次，变化 {ChangedFrameCount} 次";
+
+    public IReadOnlyList<OcrBackendChoice> OcrBackendChoices => OcrBackendCatalog.Choices;
+
+    public OcrBackendChoice SelectedOcrBackendChoice
+    {
+        get => _selectedOcrBackendChoice;
+        set
+        {
+            if (IsMonitoring || _isCapturing)
+            {
+                CaptureStatusText = "请先停止监控，再切换 OCR 后端";
+                OnPropertyChanged(nameof(SelectedOcrBackendChoice));
+                return;
+            }
+
+            if (value is null || !SetProperty(ref _selectedOcrBackendChoice, value))
+            {
+                return;
+            }
+
+            ReplaceOcrService(value.Backend);
+        }
+    }
+
+    public bool IsOcrBackendSelectionEnabled => !IsMonitoring && !_isCapturing;
 
     public RelayCommand LoadModelCommand => _loadModelCommand;
 
@@ -286,7 +313,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private async Task RunOcrAsync(CapturedFrame frame)
     {
-        CaptureStatusText = "检测到区域变化，正在 OCR";
+        CaptureStatusText = $"检测到区域变化，正在 OCR：{SelectedOcrBackendChoice.DisplayName}";
         var ocrText = await _ocrService.RecognizeTextAsync(frame);
 
         if (string.IsNullOrWhiteSpace(ocrText))
@@ -335,6 +362,34 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         _captureTimer.Stop();
         if (_translationService is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
+        DisposeOcrService(_ocrService);
+    }
+
+    private void ReplaceOcrService(OcrBackend backend)
+    {
+        if (_isCapturing)
+        {
+            CaptureStatusText = "请先停止监控，再切换 OCR 后端";
+            OnPropertyChanged(nameof(IsOcrBackendSelectionEnabled));
+            return;
+        }
+
+        var previous = _ocrService;
+        _ocrService = OcrServiceFactory.Create(backend);
+        DisposeOcrService(previous);
+
+        _lastFingerprint = null;
+        _lastOcrText = string.Empty;
+        CaptureStatusText = $"OCR 后端已切换：{SelectedOcrBackendChoice.DisplayName}";
+    }
+
+    private static void DisposeOcrService(IOcrService service)
+    {
+        if (service is IDisposable disposable)
         {
             disposable.Dispose();
         }

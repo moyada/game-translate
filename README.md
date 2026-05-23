@@ -10,6 +10,7 @@ Windows 10 / Windows 11 x64 WPF app for translating selected game chat text with
 - Runtime: LLamaSharp in-process inference
 - Backend: `LLamaSharp.Backend.Cuda12.Windows`
 - CUDA runtime libraries: `NtvLibs.cuda12.cublas.runtime.win-x64`
+- OCR: Windows OCR by default; optional PaddleOCR backend through PaddleSharp
 - CPU fallback: not supported in v1
 
 ## Requirements
@@ -124,6 +125,7 @@ The current build is the first integration slice:
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Preprocesses colored game chat text into high-contrast black text on white background before OCR.
+- Can switch OCR backend between Windows OCR and PaddleOCR. PaddleOCR uses the original color capture and upscales it before recognition, which is better for very small colored game chat text.
 - Shows both the raw capture preview and the OCR preprocessing preview for tuning.
 - Runs Windows OCR when the selected region changes, then writes recognized text into the source text box.
 - Automatically translates changed OCR text when the CUDA model is loaded.

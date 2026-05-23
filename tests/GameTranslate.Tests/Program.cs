@@ -14,6 +14,9 @@ var tests = new List<(string Name, Action Test)>
     ("ocr preprocessor detects colored text", OcrPreprocessorDetectsColoredText),
     ("ocr preprocessor converts colored text to black", OcrPreprocessorConvertsColoredTextToBlack),
     ("ocr preprocessor output stride", OcrPreprocessorOutputStride),
+    ("ocr backend choices", OcrBackendChoices),
+    ("ocr backend default", OcrBackendDefault),
+    ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
@@ -184,6 +187,26 @@ static void OcrPreprocessorConvertsColoredTextToBlack()
 static void OcrPreprocessorOutputStride()
 {
     Assert(OcrImagePreprocessor.GetOutputStride(17) == 68, "stride should be width * 4");
+}
+
+static void OcrBackendChoices()
+{
+    var choices = OcrBackendCatalog.Choices;
+    Assert(choices.Count == 2, $"expected 2 choices, got {choices.Count}");
+    Assert(choices[0].Backend == OcrBackend.Windows, "Windows OCR should be first/default");
+    Assert(choices[0].DisplayName == "Windows OCR", choices[0].DisplayName);
+    Assert(choices[1].Backend == OcrBackend.PaddleSharp, "PaddleOCR option missing");
+    Assert(choices[1].DisplayName == "PaddleOCR", choices[1].DisplayName);
+}
+
+static void OcrBackendDefault()
+{
+    Assert(OcrBackendCatalog.DefaultBackend == OcrBackend.Windows, "default OCR backend should stay Windows OCR");
+}
+
+static void PaddleOcrUpscaleFactor()
+{
+    Assert(PaddleSharpOcrService.InputScaleFactor == 3.0, "PaddleOCR should upscale small game text");
 }
 
 static void OcrTextNormalizerTrimsAndDropsBlankLines()
