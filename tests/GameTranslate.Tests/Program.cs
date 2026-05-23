@@ -13,7 +13,8 @@ var tests = new List<(string Name, Action Test)>
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
     ("translation options", TranslationOptionsDefaults),
-    ("prompt content", PromptContent),
+    ("qwen chat prompt content", QwenChatPromptContent),
+    ("simple translation prompt", SimpleTranslationPrompt),
     ("blank prompt", BlankPrompt)
 };
 
@@ -173,12 +174,24 @@ static void CudaNativeLibraryResolverMissingFile()
     }
 }
 
-static void PromptContent()
+static void QwenChatPromptContent()
 {
     var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt("push mid now");
+    Assert(prompt.Contains("<|im_start|>system", StringComparison.Ordinal), "missing system header");
+    Assert(prompt.Contains("<|im_start|>user", StringComparison.Ordinal), "missing user header");
+    Assert(prompt.Contains("<|im_start|>assistant", StringComparison.Ordinal), "missing assistant header");
     Assert(prompt.Contains("/no_think", StringComparison.Ordinal), "missing /no_think");
     Assert(prompt.Contains("Only output the Chinese translation.", StringComparison.Ordinal), "missing output rule");
     Assert(prompt.Contains("push mid now", StringComparison.Ordinal), "missing source text");
+    Assert(prompt.TrimEnd().EndsWith("<|im_start|>assistant", StringComparison.Ordinal), "prompt should end at assistant turn");
+}
+
+static void SimpleTranslationPrompt()
+{
+    var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt("Hello.");
+    Assert(prompt.Contains("Hello.", StringComparison.Ordinal), "missing simple sentence");
+    Assert(prompt.Contains("Do not repeat the English source.", StringComparison.Ordinal), "missing source repeat guard");
+    Assert(!prompt.Contains("Text:", StringComparison.Ordinal), "legacy prompt marker should not be used");
 }
 
 static void BlankPrompt()

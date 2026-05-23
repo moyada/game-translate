@@ -81,6 +81,32 @@ Expected files include `runtimes\win-x64\native\cuda12\llama.dll`, `ggml.dll`, `
 dotnet run --project tests/GameTranslate.Tests/GameTranslate.Tests.csproj -c Release -p:Platform=x64
 ```
 
+## Manual Translation Check
+
+After the model is loaded, test with short sentences first:
+
+```text
+Hello.
+```
+
+Expected output should be close to:
+
+```text
+你好。
+```
+
+Then test:
+
+```text
+I am ready.
+```
+
+Expected output should be close to:
+
+```text
+我准备好了。
+```
+
 ## Publish
 
 ```powershell

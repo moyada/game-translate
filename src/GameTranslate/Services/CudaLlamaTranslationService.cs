@@ -82,8 +82,7 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
                 AntiPrompts = new List<string>
                 {
                     "<|im_end|>",
-                    "<|endoftext|>",
-                    "\nText:"
+                    "<|endoftext|>"
                 }
             };
 
