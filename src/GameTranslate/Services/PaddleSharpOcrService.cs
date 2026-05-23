@@ -16,6 +16,10 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 
     public const bool UsesLightContrastEnhancement = true;
 
+    public const double ContrastClipLimit = 3.0;
+
+    public const double SharpenAmount = 0.55;
+
     public const bool RecreatesEngineAfterFailure = true;
 
     public const bool RecreatesEngineAfterRecognition = true;
@@ -150,7 +154,7 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         var channels = Cv2.Split(lab);
         try
         {
-            using var clahe = Cv2.CreateCLAHE(clipLimit: 2.0, tileGridSize: new CvSize(8, 8));
+            using var clahe = Cv2.CreateCLAHE(clipLimit: ContrastClipLimit, tileGridSize: new CvSize(8, 8));
             clahe.Apply(channels[0], channels[0]);
             Cv2.Merge(channels, enhancedLab);
             Cv2.CvtColor(enhancedLab, sharpened, ColorConversionCodes.Lab2BGR);
@@ -164,7 +168,7 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         }
 
         Cv2.GaussianBlur(sharpened, blurred, new CvSize(0, 0), 1.0);
-        Cv2.AddWeighted(sharpened, 1.35, blurred, -0.35, 0, output);
+        Cv2.AddWeighted(sharpened, 1.0 + SharpenAmount, blurred, -SharpenAmount, 0, output);
     }
 
     private static IEnumerable<string> SplitLines(string text)

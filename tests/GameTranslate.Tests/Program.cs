@@ -23,6 +23,8 @@ var tests = new List<(string Name, Action Test)>
     ("manual translation captures ocr and translates once", ManualTranslationCapturesOcrAndTranslatesOnce),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
+    ("image change detector ten percent threshold", ImageChangeDetectorTenPercentThreshold),
+    ("monitoring force translation policy", MonitoringForceTranslationPolicy),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
     ("paddle ocr light contrast enhancement", PaddleOcrLightContrastEnhancement),
@@ -288,6 +290,23 @@ static void ImageChangeDetectorChanged()
     Assert(ImageChangeDetector.HasMeaningfulChange(first, second), "different frame should be treated as changed");
 }
 
+static void ImageChangeDetectorTenPercentThreshold()
+{
+    Assert(ImageChangeDetector.DefaultChangedSampleRatioThreshold == 0.10, "default change threshold should be 10%");
+
+    var previous = new ImageFingerprint(16, 16, Enumerable.Repeat((byte)20, 100).ToArray());
+    var ninePercent = new ImageFingerprint(16, 16, previous.Samples.Select((value, index) => index < 9 ? (byte)220 : value).ToArray());
+    var elevenPercent = new ImageFingerprint(16, 16, previous.Samples.Select((value, index) => index < 11 ? (byte)220 : value).ToArray());
+
+    Assert(!ImageChangeDetector.HasMeaningfulChange(previous, ninePercent), "9% changed samples should wait");
+    Assert(ImageChangeDetector.HasMeaningfulChange(previous, elevenPercent), "11% changed samples should trigger OCR");
+}
+
+static void MonitoringForceTranslationPolicy()
+{
+    Assert(MainViewModel.ForceTranslationAfterUnchangedFrames == 5, "monitoring should force translation every 5 unchanged frames");
+}
+
 static byte[] CreateBgraPixels(int width, int height, byte blue, byte green, byte red)
 {
     var stride = width * 4;
@@ -316,6 +335,8 @@ static void PaddleOcrUpscaleFactor()
 static void PaddleOcrLightContrastEnhancement()
 {
     Assert(PaddleSharpOcrService.UsesLightContrastEnhancement, "PaddleOCR should enhance low-contrast game chat text");
+    Assert(PaddleSharpOcrService.ContrastClipLimit >= 3.0, "PaddleOCR contrast should be stronger for low-contrast chat");
+    Assert(PaddleSharpOcrService.SharpenAmount >= 0.55, "PaddleOCR sharpen amount should preserve small punctuation");
 }
 
 static void PaddleOcrRecreatesEngineAfterFailure()

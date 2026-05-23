@@ -24,6 +24,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private ImageSource? _latestOcrImage;
     private ImageFingerprint? _lastFingerprint;
     private string _lastOcrText = string.Empty;
+    private int _unchangedFrameStreak;
     private int _captureCount;
     private int _changedFrameCount;
     private bool _isModelLoaded;
@@ -33,6 +34,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public const bool UsesLazyModelLoading = true;
 
     public const bool UsesSingleShotCaptureTranslation = true;
+
+    public const int ForceTranslationAfterUnchangedFrames = 5;
 
     public MainViewModel()
         : this(new CudaLlamaTranslationService(), new ScreenCaptureService(), new PaddleSharpOcrService())
@@ -198,6 +201,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         CaptureSelection = captureSelection;
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
+        _unchangedFrameStreak = 0;
         StatusText = "已选择截图区域";
         CaptureStatusText = "截图区域已更新";
     }
@@ -208,6 +212,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         CaptureSelection = new CaptureSelection(default, default, 1, 1);
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
+        _unchangedFrameStreak = 0;
         LatestCaptureImage = null;
         LatestOcrImage = null;
         CaptureStatusText = "未选择截图区域";
@@ -308,6 +313,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _monitoringCancellation = new CancellationTokenSource();
         _lastFingerprint = null;
         _lastOcrText = string.Empty;
+        _unchangedFrameStreak = 0;
         CaptureCount = 0;
         ChangedFrameCount = 0;
         IsMonitoring = true;
@@ -349,12 +355,23 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             if (changed)
             {
+                _unchangedFrameStreak = 0;
                 ChangedFrameCount++;
                 await RunOcrAsync(frame, cancellationToken, skipUnchangedText: true, isMonitoringCapture: true);
             }
             else
             {
-                CaptureStatusText = "区域无变化，等待";
+                _unchangedFrameStreak++;
+                if (_unchangedFrameStreak >= ForceTranslationAfterUnchangedFrames)
+                {
+                    _unchangedFrameStreak = 0;
+                    CaptureStatusText = "连续 5 次无变化，强制 OCR 翻译";
+                    await RunOcrAsync(frame, cancellationToken, skipUnchangedText: false, isMonitoringCapture: true);
+                }
+                else
+                {
+                    CaptureStatusText = $"区域无变化，等待（{_unchangedFrameStreak}/{ForceTranslationAfterUnchangedFrames}）";
+                }
             }
         }
         catch (OperationCanceledException)

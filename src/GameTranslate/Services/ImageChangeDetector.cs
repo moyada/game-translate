@@ -4,7 +4,8 @@ namespace GameTranslate.Services;
 
 public static class ImageChangeDetector
 {
-    public const double DefaultDifferenceThreshold = 4.0;
+    public const double DefaultChangedSampleRatioThreshold = 0.10;
+    public const byte DefaultSampleDifferenceThreshold = 24;
     private const int SampleColumns = 16;
     private const int SampleRows = 16;
 
@@ -55,17 +56,44 @@ public static class ImageChangeDetector
         return total / (double)previous.Samples.Length;
     }
 
+    public static double CalculateChangedSampleRatio(
+        ImageFingerprint previous,
+        ImageFingerprint current,
+        byte sampleDifferenceThreshold = DefaultSampleDifferenceThreshold)
+    {
+        if (previous.Width != current.Width || previous.Height != current.Height)
+        {
+            return 1.0;
+        }
+
+        if (previous.Samples.Length != current.Samples.Length)
+        {
+            return 1.0;
+        }
+
+        var changedSamples = 0;
+        for (var i = 0; i < previous.Samples.Length; i++)
+        {
+            if (Math.Abs(previous.Samples[i] - current.Samples[i]) > sampleDifferenceThreshold)
+            {
+                changedSamples++;
+            }
+        }
+
+        return changedSamples / (double)previous.Samples.Length;
+    }
+
     public static bool HasMeaningfulChange(
         ImageFingerprint? previous,
         ImageFingerprint current,
-        double threshold = DefaultDifferenceThreshold)
+        double changedSampleRatioThreshold = DefaultChangedSampleRatioThreshold)
     {
         if (previous is null)
         {
             return true;
         }
 
-        return CalculateDifference(previous, current) > threshold;
+        return CalculateChangedSampleRatio(previous, current) > changedSampleRatioThreshold;
     }
 
     private static byte ToLuminance(byte red, byte green, byte blue)
@@ -73,4 +101,3 @@ public static class ImageChangeDetector
         return (byte)Math.Clamp((red * 299 + green * 587 + blue * 114) / 1000, 0, 255);
     }
 }
-
