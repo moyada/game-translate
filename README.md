@@ -121,6 +121,7 @@ The current build is the first integration slice:
 - Forces CUDA backend selection and disables native backend fallback.
 - Uses a full-screen draggable selection box directly over the chat area.
 - Captures the selected screen region every 200 ms and detects image changes.
+- Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Runs Windows OCR when the selected region changes, then writes recognized text into the source text box.
 - Automatically translates changed OCR text when the CUDA model is loaded.
 - Provides manual English input and Chinese translation output in WPF.

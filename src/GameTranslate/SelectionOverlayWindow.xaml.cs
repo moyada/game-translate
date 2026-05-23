@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Shapes;
 using GameTranslate.Models;
+using GameTranslate.Services;
 using WpfKey = System.Windows.Input.Key;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
 using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
@@ -18,6 +19,8 @@ public partial class SelectionOverlayWindow : Window
     private WpfPoint _startMouse;
     private CaptureRegion _startRegion;
     private DragMode _dragMode = DragMode.None;
+    private double _screenScaleX = 1;
+    private double _screenScaleY = 1;
 
     public SelectionOverlayWindow(CaptureRegion initialRegion)
     {
@@ -26,6 +29,7 @@ public partial class SelectionOverlayWindow : Window
         Top = SystemParameters.VirtualScreenTop;
         Width = SystemParameters.VirtualScreenWidth;
         Height = SystemParameters.VirtualScreenHeight;
+        SourceInitialized += (_, _) => UpdateScreenScale();
 
         if (!initialRegion.IsEmpty)
         {
@@ -38,6 +42,8 @@ public partial class SelectionOverlayWindow : Window
     }
 
     public CaptureRegion SelectedRegion { get; private set; }
+
+    public CaptureRegion SelectedPixelRegion => CoordinateScaler.Scale(SelectedRegion, _screenScaleX, _screenScaleY);
 
     private CaptureRegion CurrentRegion
     {
@@ -241,6 +247,18 @@ public partial class SelectionOverlayWindow : Window
             SelectedRegion = CurrentRegion;
             DialogResult = true;
         }
+    }
+
+    private void UpdateScreenScale()
+    {
+        var source = PresentationSource.FromVisual(this);
+        if (source?.CompositionTarget is null)
+        {
+            return;
+        }
+
+        _screenScaleX = source.CompositionTarget.TransformToDevice.M11;
+        _screenScaleY = source.CompositionTarget.TransformToDevice.M22;
     }
 
     private enum DragMode

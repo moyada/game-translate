@@ -25,7 +25,7 @@ public partial class MainWindow : Window
 
         if (overlay.ShowDialog() == true)
         {
-            viewModel.SetCaptureRegion(overlay.SelectedRegion);
+            viewModel.SetCaptureRegion(overlay.SelectedPixelRegion);
         }
     }
 

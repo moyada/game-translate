@@ -7,6 +7,7 @@ var tests = new List<(string Name, Action Test)>
     ("default model chooses first gguf", DefaultModelChoosesFirstGguf),
     ("capture region normalize", CaptureRegionNormalize),
     ("capture region display", CaptureRegionDisplay),
+    ("coordinate scaler scales capture region", CoordinateScalerScalesCaptureRegion),
     ("image change detector unchanged", ImageChangeDetectorUnchanged),
     ("image change detector changed", ImageChangeDetectorChanged),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
@@ -88,6 +89,17 @@ static void CaptureRegionDisplay()
     var region = new CaptureRegion(12.4, 20.5, 300.2, 80.8);
     Assert(region.ToDisplayText() == "X=12, Y=21, W=300, H=81", region.ToDisplayText());
     Assert(default(CaptureRegion).ToDisplayText() == "未选择区域", "empty region text mismatch");
+}
+
+static void CoordinateScalerScalesCaptureRegion()
+{
+    var region = new CaptureRegion(100, 200, 300, 80);
+    var scaled = CoordinateScaler.Scale(region, 1.25, 1.5);
+
+    Assert(scaled.X == 125, "X mismatch");
+    Assert(scaled.Y == 300, "Y mismatch");
+    Assert(scaled.Width == 375, "Width mismatch");
+    Assert(scaled.Height == 120, "Height mismatch");
 }
 
 static void ImageChangeDetectorUnchanged()
