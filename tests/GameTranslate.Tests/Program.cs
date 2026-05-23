@@ -162,19 +162,22 @@ static void OcrPreprocessorDetectsColoredText()
 
 static void OcrPreprocessorConvertsColoredTextToBlack()
 {
-    var pixels = CreateBgraPixels(3, 3, 130, 130, 130);
-    var centerOffset = (1 * 3 + 1) * 4;
+    const int width = 5;
+    const int height = 5;
+    var pixels = CreateBgraPixels(width, height, 130, 130, 130);
+    var centerOffset = (2 * width + 2) * 4;
     pixels[centerOffset] = 20;
     pixels[centerOffset + 1] = 210;
     pixels[centerOffset + 2] = 210;
     pixels[centerOffset + 3] = 255;
 
-    var processed = OcrImagePreprocessor.CreateHighContrastBgra(pixels, 3, 3, 3 * 4);
+    var processed = OcrImagePreprocessor.CreateHighContrastBgra(pixels, width, height, width * 4);
+    var farBackgroundOffset = 0;
 
     Assert(processed[centerOffset] == 0, "text blue channel should be black");
     Assert(processed[centerOffset + 1] == 0, "text green channel should be black");
     Assert(processed[centerOffset + 2] == 0, "text red channel should be black");
-    Assert(processed[0] == 255, "background should be white");
+    Assert(processed[farBackgroundOffset] == 255, "background should be white");
 }
 
 static void OcrTextNormalizerTrimsAndDropsBlankLines()
