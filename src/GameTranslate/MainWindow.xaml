@@ -173,6 +173,6 @@
     <TextBlock Grid.Row="4"
                Margin="0,14,0,0"
                Foreground="{StaticResource MutedTextBrush}"
-               Text="第一版不选择目标窗口，直接使用全屏透明选择框确定聊天区域；截图、OCR、200ms 轮询会接到同一套区域数据。" />
+               Text="第一版不选择目标窗口，直接使用全屏透明选择框选定聊天区域；截图、OCR、200ms 轮询会接到同一套区域数据。" />
   </Grid>
 </Window>

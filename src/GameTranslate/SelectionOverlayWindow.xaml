@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
         AllowsTransparency="True"
-        Background="#11000000"
+        Background="Transparent"
         Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
@@ -41,25 +41,5 @@
     <Rectangle x:Name="SouthEastHandle" Width="12" Height="12" Fill="#2563EB" Cursor="SizeNWSE"
                MouseLeftButtonDown="Handle_MouseLeftButtonDown" MouseMove="Handle_MouseMove" MouseLeftButtonUp="Handle_MouseLeftButtonUp" />
 
-    <StackPanel x:Name="Toolbar"
-                Orientation="Horizontal"
-                Background="#DD111827">
-      <TextBlock x:Name="RegionText"
-                 Foreground="White"
-                 VerticalAlignment="Center"
-                 Margin="12,0"
-                 MinWidth="220" />
-      <Button Content="确定"
-              Width="72"
-              Height="32"
-              Margin="0,6,6,6"
-              Click="Confirm_Click" />
-      <Button Content="取消"
-              Width="72"
-              Height="32"
-              Margin="0,6,8,6"
-              Click="Cancel_Click" />
-    </StackPanel>
   </Canvas>
 </Window>
-

@@ -16,7 +16,7 @@ var tests = new List<(string Name, Action Test)>
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
     ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
     ("paddle ocr recreates engine after failure", PaddleOcrRecreatesEngineAfterFailure),
-    ("selection overlay confirm closes", SelectionOverlayConfirmCloses),
+    ("selection overlay behavior", SelectionOverlayBehaviorFlags),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
@@ -188,9 +188,10 @@ static void PaddleOcrRecreatesEngineAfterFailure()
     Assert(PaddleSharpOcrService.RecreatesEngineAfterFailure, "PaddleOCR engine should reset after native predictor failures");
 }
 
-static void SelectionOverlayConfirmCloses()
+static void SelectionOverlayBehaviorFlags()
 {
-    Assert(SelectionOverlayBehavior.CloseOnConfirm, "confirm should close overlay so it does not block other operations");
+    Assert(!SelectionOverlayBehavior.ShowsConfirmButtons, "selection overlay should not show confirm/cancel buttons");
+    Assert(SelectionOverlayBehavior.AllowsClickThroughOutsideSelection, "selection overlay should pass clicks outside the selection through");
 }
 
 static void OcrTextNormalizerTrimsAndDropsBlankLines()

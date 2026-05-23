@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Shapes;
 using GameTranslate.Models;
 using GameTranslate.Services;
@@ -16,6 +17,9 @@ public partial class SelectionOverlayWindow : Window
 {
     private const double MinimumSelectionWidth = 80;
     private const double MinimumSelectionHeight = 40;
+    private const int WmNcHitTest = 0x0084;
+    private static readonly IntPtr HitTestClient = new(1);
+    private static readonly IntPtr HitTestTransparent = new(-1);
     private WpfPoint _startMouse;
     private CaptureRegion _startRegion;
     private DragMode _dragMode = DragMode.None;
@@ -29,7 +33,11 @@ public partial class SelectionOverlayWindow : Window
         Top = SystemParameters.VirtualScreenTop;
         Width = SystemParameters.VirtualScreenWidth;
         Height = SystemParameters.VirtualScreenHeight;
-        SourceInitialized += (_, _) => UpdateScreenScale();
+        SourceInitialized += (_, _) =>
+        {
+            UpdateScreenScale();
+            AddClickThroughHook();
+        };
 
         if (!initialRegion.IsEmpty)
         {
@@ -130,6 +138,7 @@ public partial class SelectionOverlayWindow : Window
     {
         _dragMode = DragMode.None;
         SelectedRegion = CurrentRegion;
+        RaiseSelectionChanged();
     }
 
     private void UpdateSelection(WpfPoint currentMouse)
@@ -214,10 +223,6 @@ public partial class SelectionOverlayWindow : Window
         Canvas.SetTop(SouthWestHandle, y + height - halfHandle);
         Canvas.SetLeft(SouthEastHandle, x + width - halfHandle);
         Canvas.SetTop(SouthEastHandle, y + height - halfHandle);
-
-        Canvas.SetLeft(Toolbar, Math.Clamp(x, 0, Math.Max(0, Width - 420)));
-        Canvas.SetTop(Toolbar, Math.Clamp(y + height + 10, 0, Math.Max(0, Height - 48)));
-        RegionText.Text = $"{CurrentRegion.ToDisplayText()} · 缩放 {_screenScaleX * 100:0}% x {_screenScaleY * 100:0}%";
     }
 
     private DragMode GetHandleDragMode(object sender)
@@ -232,34 +237,9 @@ public partial class SelectionOverlayWindow : Window
         };
     }
 
-    private void Confirm_Click(object sender, RoutedEventArgs e)
-    {
-        ConfirmSelection();
-    }
-
-    private void Cancel_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
     private void Window_KeyDown(object sender, WpfKeyEventArgs e)
     {
         if (e.Key == WpfKey.Escape)
-        {
-            Close();
-        }
-        else if (e.Key == WpfKey.Enter)
-        {
-            ConfirmSelection();
-        }
-    }
-
-    private void ConfirmSelection()
-    {
-        SelectedRegion = CurrentRegion;
-        RaiseSelectionChanged();
-
-        if (SelectionOverlayBehavior.CloseOnConfirm)
         {
             Close();
         }
@@ -282,6 +262,60 @@ public partial class SelectionOverlayWindow : Window
     private void RaiseSelectionChanged()
     {
         SelectionChanged?.Invoke(this, SelectedCaptureSelection);
+    }
+
+    private void AddClickThroughHook()
+    {
+        var source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+        source?.AddHook(WndProc);
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg != WmNcHitTest || !SelectionOverlayBehavior.AllowsClickThroughOutsideSelection)
+        {
+            return IntPtr.Zero;
+        }
+
+        var screenPoint = GetScreenPoint(lParam);
+        var localPoint = PointFromScreen(screenPoint);
+        if (IsInteractivePoint(localPoint))
+        {
+            handled = true;
+            return HitTestClient;
+        }
+
+        handled = true;
+        return HitTestTransparent;
+    }
+
+    private bool IsInteractivePoint(WpfPoint point)
+    {
+        return IsPointInsideElement(point, SelectionBorder)
+            || IsPointInsideElement(point, NorthWestHandle)
+            || IsPointInsideElement(point, NorthEastHandle)
+            || IsPointInsideElement(point, SouthWestHandle)
+            || IsPointInsideElement(point, SouthEastHandle);
+    }
+
+    private static bool IsPointInsideElement(WpfPoint point, FrameworkElement element)
+    {
+        var x = Canvas.GetLeft(element);
+        var y = Canvas.GetTop(element);
+        var width = element.ActualWidth > 0 ? element.ActualWidth : element.Width;
+        var height = element.ActualHeight > 0 ? element.ActualHeight : element.Height;
+        return point.X >= x
+            && point.X <= x + width
+            && point.Y >= y
+            && point.Y <= y + height;
+    }
+
+    private static WpfPoint GetScreenPoint(IntPtr lParam)
+    {
+        var value = lParam.ToInt64();
+        var x = unchecked((short)(value & 0xFFFF));
+        var y = unchecked((short)((value >> 16) & 0xFFFF));
+        return new WpfPoint(x, y);
     }
 
     private enum DragMode

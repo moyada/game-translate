@@ -23,7 +23,7 @@ public partial class MainWindow : Window
 
         if (_selectionOverlay is { IsVisible: true })
         {
-            _selectionOverlay.Activate();
+            _selectionOverlay.Close();
             return;
         }
 

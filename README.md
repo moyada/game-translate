@@ -120,8 +120,9 @@ The current build is the first integration slice:
 
 - Loads the local GGUF model through LLamaSharp.
 - Forces CUDA backend selection and disables native backend fallback.
-- Uses a full-screen draggable selection box directly over the chat area.
-- Keeps the selection box visible while selecting; pressing Confirm or Enter saves the region and closes the topmost selection window so it does not block the game/app.
+- Uses a topmost draggable selection box directly over the chat area.
+- The selection box has no confirm/cancel buttons. Region changes sync live while dragging.
+- Mouse operations outside the selection box pass through to the game/app below, so the topmost overlay does not block normal screen interaction.
 - Captures the selected screen region every 200 ms and detects image changes.
 - Converts WPF selection coordinates to physical screen pixels to support Windows display scaling.
 - Uses PaddleOCR on the original color capture without color preprocessing, then upscales it before recognition.
