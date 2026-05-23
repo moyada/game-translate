@@ -14,6 +14,7 @@ Windows 10 / Windows 11 x64 WPF app for translating selected game chat text with
 - Model loading: lazy-loaded on the first manual or automatic translation
 - Monitoring: continuous capture -> PaddleOCR -> translate loop for the selected region
 - Translate button: one-shot capture -> PaddleOCR -> translate for the selected region
+- Translation prompt: MapleStory-focused chat prompt with a persisted glossary under `Resources/Glossary`
 - CPU fallback: not supported in v1
 
 ## Requirements
@@ -136,6 +137,8 @@ The current build is the first integration slice:
 - Monitoring runs a continuous loop over the selected region: capture, skip unchanged images/text, PaddleOCR, then translate changed OCR text.
 - The translate button runs a single pass over the selected region: capture once, PaddleOCR once, then translate once.
 - Writes recognized OCR text into the source text box.
+- Strips player-name prefixes such as `Steam : message` before building the LLM prompt, so only the message content is translated.
+- Loads relevant MapleStory glossary entries from `Resources/Glossary/maplestory-glossary.json` and injects only matching terms into the prompt.
 - Automatically lazy-loads the CUDA model before the first manual or monitoring translation.
 - Removes Qwen thinking blocks such as `<think>...</think>` and chat stop tokens from the displayed translation result.
 - Uses one Start/Stop monitoring button. The monitoring and translation buttons stay visible but are disabled until a capture region exists.

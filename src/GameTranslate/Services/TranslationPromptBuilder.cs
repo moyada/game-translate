@@ -11,15 +11,32 @@ public static class TranslationPromptBuilder
             return string.Empty;
         }
 
-        var normalizedText = sourceText.Trim();
+        var normalizedText = TranslationSourceNormalizer.ExtractTranslatableText(sourceText);
+        if (string.IsNullOrWhiteSpace(normalizedText))
+        {
+            return string.Empty;
+        }
+
+        var glossaryTerms = TranslationGlossary.LoadDefault().FindRelevantTerms(normalizedText, maxTerms: 24);
         var builder = new StringBuilder();
         builder.AppendLine("<|im_start|>system");
         builder.AppendLine("/no_think");
-        builder.AppendLine("You are a game chat translation engine.");
-        builder.AppendLine("Translate English into natural Simplified Chinese.");
+        builder.AppendLine("You are a MapleStory game chat translation engine for 冒险岛.");
+        builder.AppendLine("Translate English game chat into concise, natural Simplified Chinese.");
         builder.AppendLine("Only output the Chinese translation.");
         builder.AppendLine("Do not explain. Do not add notes. Do not repeat the English source.");
-        builder.AppendLine("Keep player names, numbers, commands, item names, skill names, and game terms unchanged when appropriate.");
+        builder.AppendLine("If OCR text contains a player name before a colon, ignore the name and translate only the message after the colon.");
+        builder.AppendLine("Preserve numbers, channel names, short commands, and player names when they appear inside the message.");
+        builder.AppendLine("Use official or common MapleStory Chinese terms when a glossary term applies.");
+        if (glossaryTerms.Count > 0)
+        {
+            builder.AppendLine("Relevant glossary, English => Chinese:");
+            foreach (var term in glossaryTerms)
+            {
+                builder.AppendLine($"- {term.English} => {term.Chinese}");
+            }
+        }
+
         builder.AppendLine("<|im_end|>");
         builder.AppendLine("<|im_start|>user");
         builder.AppendLine(normalizedText);

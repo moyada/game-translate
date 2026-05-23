@@ -35,6 +35,9 @@ var tests = new List<(string Name, Action Test)>
     ("translation options", TranslationOptionsDefaults),
     ("qwen chat prompt content", QwenChatPromptContent),
     ("simple translation prompt", SimpleTranslationPrompt),
+    ("chat speaker prefix stripped", ChatSpeakerPrefixStripped),
+    ("maplestory glossary prompt content", MapleStoryGlossaryPromptContent),
+    ("maplestory glossary file persists entries", MapleStoryGlossaryFilePersistsEntries),
     ("translation output removes think block", TranslationOutputRemovesThinkBlock),
     ("blank prompt", BlankPrompt)
 };
@@ -395,6 +398,33 @@ static void SimpleTranslationPrompt()
     Assert(prompt.Contains("Hello.", StringComparison.Ordinal), "missing simple sentence");
     Assert(prompt.Contains("Do not repeat the English source.", StringComparison.Ordinal), "missing source repeat guard");
     Assert(!prompt.Contains("Text:", StringComparison.Ordinal), "legacy prompt marker should not be used");
+}
+
+static void ChatSpeakerPrefixStripped()
+{
+    var text = TranslationSourceNormalizer.ExtractTranslatableText("Steam : ew you have cooties get away from me");
+    Assert(text == "ew you have cooties get away from me", text);
+
+    var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt("Steam : ew you have cooties get away from me");
+    Assert(prompt.Contains("ew you have cooties get away from me", StringComparison.Ordinal), "missing chat content");
+    Assert(!prompt.Contains("Steam :", StringComparison.Ordinal), "speaker name should not be sent as source text");
+}
+
+static void MapleStoryGlossaryPromptContent()
+{
+    var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt("go kill Slime near Henesys");
+    Assert(prompt.Contains("MapleStory", StringComparison.Ordinal), "missing MapleStory context");
+    Assert(prompt.Contains("冒险岛", StringComparison.Ordinal), "missing Chinese game context");
+    Assert(prompt.Contains("Slime => 绿水灵", StringComparison.Ordinal), "missing monster glossary");
+    Assert(prompt.Contains("Henesys => 射手村", StringComparison.Ordinal), "missing map glossary");
+}
+
+static void MapleStoryGlossaryFilePersistsEntries()
+{
+    var glossary = TranslationGlossary.LoadDefault();
+    Assert(glossary.Entries.Count >= 60, $"glossary entry count {glossary.Entries.Count}");
+    Assert(glossary.FindRelevantTerms("Slime and Henesys", 10).Any(entry => entry.English == "Slime" && entry.Chinese == "绿水灵"), "missing Slime entry");
+    Assert(glossary.FindRelevantTerms("Slime and Henesys", 10).Any(entry => entry.English == "Henesys" && entry.Chinese == "射手村"), "missing Henesys entry");
 }
 
 static void TranslationOutputRemovesThinkBlock()
