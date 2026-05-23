@@ -4,5 +4,7 @@ public static class SelectionOverlayBehavior
 {
     public const bool ShowsConfirmButtons = false;
 
+    public const bool ShowsInstructionText = false;
+
     public const bool AllowsClickThroughOutsideSelection = true;
 }

@@ -310,6 +310,7 @@ static void PaddleOcrRecreatesEngineAfterFailure()
 static void SelectionOverlayBehaviorFlags()
 {
     Assert(!SelectionOverlayBehavior.ShowsConfirmButtons, "selection overlay should not show confirm/cancel buttons");
+    Assert(!SelectionOverlayBehavior.ShowsInstructionText, "selection overlay should not show instruction text");
     Assert(SelectionOverlayBehavior.AllowsClickThroughOutsideSelection, "selection overlay should pass clicks outside the selection through");
 }
 

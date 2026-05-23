@@ -20,17 +20,7 @@
             Canvas.Top="360"
             MouseLeftButtonDown="SelectionBorder_MouseLeftButtonDown"
             MouseMove="SelectionBorder_MouseMove"
-            MouseLeftButtonUp="SelectionBorder_MouseLeftButtonUp">
-      <Grid>
-        <TextBlock Text="拖动选择聊天区域"
-                   Foreground="White"
-                   FontWeight="SemiBold"
-                   Background="#AA111827"
-                   Padding="8,4"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top" />
-      </Grid>
-    </Border>
+            MouseLeftButtonUp="SelectionBorder_MouseLeftButtonUp" />
 
     <Rectangle x:Name="NorthWestHandle" Width="12" Height="12" Fill="#2563EB" Cursor="SizeNWSE"
                MouseLeftButtonDown="Handle_MouseLeftButtonDown" MouseMove="Handle_MouseMove" MouseLeftButtonUp="Handle_MouseLeftButtonUp" />
