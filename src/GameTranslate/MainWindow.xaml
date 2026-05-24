@@ -36,6 +36,7 @@
           Padding="20"
           BorderBrush="#BFD1D5DB"
           BorderThickness="1"
+          CornerRadius="8"
           Background="{Binding ElementName=OpacitySlider, Path=Value, Converter={StaticResource OpacityToBackgroundBrushConverter}}"
           MouseLeftButtonDown="WindowSurface_MouseLeftButtonDown">
   <Grid>
@@ -66,10 +67,13 @@
               Content="翻译"
               Command="{Binding TranslateCommand}" />
       <Button Grid.Column="4"
-              Width="30"
-              MinWidth="30"
+              Width="17"
+              Height="17"
+              MinWidth="17"
               Padding="0"
               HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              FontSize="10"
               Background="#DC2626"
               Content="X"
               Click="CloseButton_Click" />
