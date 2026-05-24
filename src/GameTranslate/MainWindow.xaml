@@ -33,6 +33,7 @@
   <Grid Margin="20">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
@@ -56,7 +57,59 @@
               Command="{Binding TranslateCommand}" />
     </Grid>
 
-    <Grid Grid.Row="1">
+    <Grid Grid.Row="1" Margin="0,0,0,18">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Grid Grid.Column="0" Margin="0,0,8,0">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="92" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0"
+                   Text="OCR 截图"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8" />
+        <Border Grid.Row="1"
+                Background="White"
+                BorderBrush="#D1D5DB"
+                BorderThickness="1"
+                CornerRadius="6">
+          <Image Source="{Binding LatestCaptureImage}"
+                 Stretch="Uniform"
+                 RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        </Border>
+      </Grid>
+
+      <Grid Grid.Column="1" Margin="8,0,0,0">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="92" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0"
+                   Text="识别的英文"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8" />
+        <Border Grid.Row="1"
+                Background="White"
+                BorderBrush="#D1D5DB"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="10,8">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <TextBlock Text="{Binding SourceText}"
+                       TextWrapping="Wrap"
+                       Foreground="#1F2937"
+                       FontSize="13"
+                       TextOptions.TextFormattingMode="Display" />
+          </ScrollViewer>
+        </Border>
+      </Grid>
+    </Grid>
+
+    <Grid Grid.Row="2">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />

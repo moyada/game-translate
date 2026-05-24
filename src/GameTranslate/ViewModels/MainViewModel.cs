@@ -16,7 +16,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly RelayCommand _toggleMonitoringCommand;
     private CancellationTokenSource? _monitoringCancellation;
     private readonly string _modelPath;
-    private string _sourceText = "hello, team. the boss is spawning near the bridge.";
+    private string _sourceText = string.Empty;
     private string _translatedText = string.Empty;
     private string _statusText = "模型将在首次翻译时加载";
     private string _captureStatusText = "截图监控未开始";
