@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Game Translate"
         Width="560"
-        Height="430"
+        Height="390"
         MinWidth="460"
-        MinHeight="340"
+        MinHeight="300"
         Background="#F7F8FA"
         FontFamily="Microsoft YaHei UI"
         FontSize="14">
@@ -36,7 +36,6 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <Grid Grid.Row="0" Margin="0,0,0,18">
@@ -92,9 +91,5 @@
                VerticalContentAlignment="Top" />
     </Grid>
 
-    <TextBlock Grid.Row="3"
-               Margin="0,14,0,0"
-               Foreground="{StaticResource MutedTextBrush}"
-               Text="第一版不选择目标窗口，直接使用全屏透明选择框选定聊天区域；截图、OCR、200ms 轮询会接到同一套区域数据。" />
   </Grid>
 </Window>
