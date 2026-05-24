@@ -18,6 +18,7 @@ var tests = new List<(string Name, Action Test)>
     ("translate command refreshes on selection", TranslateCommandRefreshesOnSelection),
     ("clear selection disables controls", ClearSelectionDisablesControls),
     ("monitoring button text", MonitoringButtonText),
+    ("monitoring interval policy", MonitoringIntervalPolicy),
     ("llm lazy load policy", LlmLazyLoadPolicy),
     ("single shot translation policy", SingleShotTranslationPolicy),
     ("manual translation captures ocr and translates once", ManualTranslationCapturesOcrAndTranslatesOnce),
@@ -232,6 +233,12 @@ static void MonitoringButtonText()
         new FakeOcrService());
 
     Assert(viewModel.MonitoringButtonText == "开始监控", viewModel.MonitoringButtonText);
+}
+
+static void MonitoringIntervalPolicy()
+{
+    Assert(MainViewModel.MinMonitoringIntervalMs == 400, "minimum monitoring interval should be 400ms");
+    Assert(MainViewModel.MaxMonitoringIntervalMs == 600, "maximum monitoring interval should be 600ms");
 }
 
 static void LlmLazyLoadPolicy()

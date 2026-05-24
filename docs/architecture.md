@@ -17,7 +17,7 @@
 ### Monitoring
 
 1. User places a draggable capture rectangle over the chat area.
-2. The app captures the selected region every 200 ms.
+2. The app captures the selected region on a randomized 400-600 ms interval.
 3. `ImageChangeDetector` compares 16x16 sampled luminance points and treats the frame as changed when at least 3% of samples differ.
 4. If the image or OCR text is unchanged, the app waits.
 5. After 5 consecutive unchanged frames, monitoring forces one OCR + translation pass to catch missed low-contrast updates.
@@ -50,7 +50,7 @@ Username detection deliberately requires a real colon. Semicolon-like OCR output
 
 ## Current Build
 
-The current implementation completes lazy local model loading, single-shot selected-region translation, draggable region selection, selected-region screenshot capture, 200 ms image change detection, PaddleOCR text extraction, and automatic LLM translation. Result overlay presentation and OCR tuning are the next modules to add.
+The current implementation completes lazy local model loading, single-shot selected-region translation, draggable region selection, selected-region screenshot capture, randomized 400-600 ms image change detection, PaddleOCR text extraction, and automatic LLM translation. Result overlay presentation and OCR tuning are the next modules to add.
 
 ## Model Placement
 

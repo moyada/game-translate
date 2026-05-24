@@ -11,6 +11,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly IScreenCaptureService _screenCaptureService;
     private readonly IOcrService _ocrService;
     private readonly DispatcherTimer _captureTimer;
+    private readonly Random _monitoringIntervalRandom = new();
     private readonly RelayCommand _translateCommand;
     private readonly RelayCommand _toggleMonitoringCommand;
     private CancellationTokenSource? _monitoringCancellation;
@@ -38,6 +39,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public const int ForceTranslationAfterUnchangedFrames = 5;
 
+    public const int MinMonitoringIntervalMs = 400;
+
+    public const int MaxMonitoringIntervalMs = 600;
+
     public MainViewModel()
         : this(new CudaLlamaTranslationService(), new ScreenCaptureService(), new PaddleSharpOcrService())
     {
@@ -51,10 +56,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _translationService = translationService;
         _screenCaptureService = screenCaptureService;
         _ocrService = ocrService;
-        _captureTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(200)
-        };
+        _captureTimer = new DispatcherTimer();
+        ScheduleNextMonitoringTick();
         _captureTimer.Tick += async (_, _) => await CaptureTickAsync(_monitoringCancellation?.Token ?? CancellationToken.None);
         _modelPath = ModelPathResolver.GetDefaultModelPath(AppContext.BaseDirectory);
         _translateCommand = new RelayCommand(TranslateAsync, () => CanTranslate);
@@ -322,6 +325,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ChangedFrameCount = 0;
         IsMonitoring = true;
         CaptureStatusText = "正在监控截图区域";
+        ScheduleNextMonitoringTick();
         _captureTimer.Start();
         _ = CaptureTickAsync(_monitoringCancellation.Token);
         return Task.CompletedTask;
@@ -391,7 +395,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         finally
         {
             IsCaptureBusy = false;
+            if (IsMonitoring && !cancellationToken.IsCancellationRequested)
+            {
+                ScheduleNextMonitoringTick();
+            }
         }
+    }
+
+    private void ScheduleNextMonitoringTick()
+    {
+        var interval = _monitoringIntervalRandom.Next(MinMonitoringIntervalMs, MaxMonitoringIntervalMs + 1);
+        _captureTimer.Interval = TimeSpan.FromMilliseconds(interval);
     }
 
     private async Task RunOcrAsync(

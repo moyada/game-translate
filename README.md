@@ -128,7 +128,7 @@ The current build is the first integration slice:
 - Uses a topmost draggable selection box directly over the chat area.
 - The selection box has no confirm/cancel buttons. Region changes sync live while dragging.
 - Mouse operations outside the selection box pass through to the game/app below, so the topmost overlay does not block normal screen interaction.
-- Captures the selected screen region every 200 ms and detects image changes.
+- Captures the selected screen region on a randomized 400-600 ms interval and detects image changes.
 - Treats a frame as changed when at least 3% of sampled points differ from the previous frame.
 - Forces one OCR + translation pass after 5 consecutive unchanged frames.
 - Skips LLM translation when the OCR source text is identical to the previous successfully translated source text.
