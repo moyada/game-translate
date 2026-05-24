@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
+using MediaColor = System.Windows.Media.Color;
 
 namespace GameTranslate.Converters;
 
@@ -14,8 +15,8 @@ public sealed class OpacityToBackgroundBrushConverter : IValueConverter
 
         return rgb switch
         {
-            "White" => new SolidColorBrush(Color.FromArgb(alpha, 255, 255, 255)),
-            _ => new SolidColorBrush(Color.FromArgb(alpha, 247, 248, 250))
+            "White" => new SolidColorBrush(MediaColor.FromArgb(alpha, 255, 255, 255)),
+            _ => new SolidColorBrush(MediaColor.FromArgb(alpha, 247, 248, 250))
         };
     }
 
