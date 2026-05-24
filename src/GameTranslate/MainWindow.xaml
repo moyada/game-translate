@@ -139,7 +139,6 @@
                  SelectionTextBrush="#111827"
                  FontSize="16"
                  FontWeight="SemiBold"
-                 LineHeight="24"
                  TextOptions.TextFormattingMode="Display" />
       </Border>
     </Grid>
