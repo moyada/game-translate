@@ -1,0 +1,34 @@
+<Window x:Class="GameTranslate.FloatingTranslationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="悬浮翻译"
+        Width="520"
+        Height="170"
+        MinWidth="320"
+        MinHeight="100"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        Topmost="True"
+        FontFamily="Microsoft YaHei UI"
+        FontSize="14">
+  <Border Background="#B3000000"
+          BorderBrush="#66FFFFFF"
+          BorderThickness="1"
+          CornerRadius="8"
+          Padding="14,12"
+          MouseLeftButtonDown="WindowSurface_MouseLeftButtonDown">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <TextBlock Text="{Binding TranslatedText}"
+                 TextWrapping="Wrap"
+                 Foreground="#F9FAFB"
+                 FontSize="16"
+                 FontWeight="SemiBold"
+                 LineHeight="24"
+                 LineStackingStrategy="BlockLineHeight"
+                 TextOptions.TextFormattingMode="Display" />
+    </ScrollViewer>
+  </Border>
+</Window>

@@ -112,7 +112,8 @@
       </Grid>
     </Grid>
 
-    <Grid Grid.Row="2">
+    <Grid x:Name="TranslationResultPanel"
+          Grid.Row="2">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
@@ -142,15 +143,24 @@
       </Border>
     </Grid>
 
-    <Button x:Name="PreviewToggleButton"
-            Grid.Row="3"
-            Margin="0,12,0,0"
-            MinWidth="84"
-            Height="28"
-            Padding="10,0"
-            HorizontalAlignment="Left"
-            Content="隐藏 OCR"
-            Click="PreviewToggleButton_Click" />
+    <StackPanel Grid.Row="3"
+                Margin="0,12,0,0"
+                Orientation="Horizontal"
+                HorizontalAlignment="Left">
+      <Button x:Name="PreviewToggleButton"
+              MinWidth="84"
+              Height="28"
+              Padding="10,0"
+              Content="隐藏 OCR"
+              Click="PreviewToggleButton_Click" />
+      <Button x:Name="FloatingToggleButton"
+              Margin="10,0,0,0"
+              MinWidth="84"
+              Height="28"
+              Padding="10,0"
+              Content="悬浮窗"
+              Click="FloatingToggleButton_Click" />
+    </StackPanel>
 
   </Grid>
 </Window>

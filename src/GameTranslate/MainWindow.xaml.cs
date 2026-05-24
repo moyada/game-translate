@@ -7,11 +7,14 @@ namespace GameTranslate;
 public partial class MainWindow : Window
 {
     private const double FallbackPreviewPanelHeight = 136;
+    private const double FallbackTranslationPanelHeight = 170;
 
     private SelectionOverlayWindow? _selectionOverlay;
+    private FloatingTranslationWindow? _floatingTranslationWindow;
     private SafeHotKeyMonitor? _hotKeyMonitor;
     private bool _isPreviewVisible = true;
     private double _previewPanelHeightDelta;
+    private double _translationPanelHeightDelta;
     private bool _isClosing;
 
     public MainWindow()
@@ -78,9 +81,92 @@ public partial class MainWindow : Window
         return height > 1 ? height : FallbackPreviewPanelHeight;
     }
 
+    private void FloatingToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_floatingTranslationWindow is { IsVisible: true })
+        {
+            CloseFloatingTranslationWindow(restoreTranslationPanel: true);
+            return;
+        }
+
+        ShowFloatingTranslationWindow();
+    }
+
+    private void ShowFloatingTranslationWindow()
+    {
+        if (_floatingTranslationWindow is { IsVisible: true })
+        {
+            return;
+        }
+
+        _translationPanelHeightDelta = CollapseTranslationPanelAndShrinkWindow();
+        FloatingToggleButton.Content = "关闭悬浮窗";
+
+        _floatingTranslationWindow = new FloatingTranslationWindow
+        {
+            Owner = this,
+            DataContext = DataContext,
+            Left = Left + 24,
+            Top = Top + 80
+        };
+        _floatingTranslationWindow.Closed += FloatingTranslationWindow_Closed;
+        _floatingTranslationWindow.Show();
+    }
+
+    private double CollapseTranslationPanelAndShrinkWindow()
+    {
+        var heightDelta = GetTranslationPanelHeightDelta();
+        TranslationResultPanel.Visibility = Visibility.Collapsed;
+
+        var previousHeight = ActualHeight;
+        Height = Math.Max(MinHeight, ActualHeight - heightDelta);
+        return Math.Max(0, previousHeight - Height);
+    }
+
+    private double GetTranslationPanelHeightDelta()
+    {
+        var margin = TranslationResultPanel.Margin;
+        var height = TranslationResultPanel.ActualHeight + margin.Top + margin.Bottom;
+        return height > 1 ? height : FallbackTranslationPanelHeight;
+    }
+
+    private void CloseFloatingTranslationWindow(bool restoreTranslationPanel)
+    {
+        if (_floatingTranslationWindow is not null)
+        {
+            _floatingTranslationWindow.Closed -= FloatingTranslationWindow_Closed;
+            _floatingTranslationWindow.Close();
+            _floatingTranslationWindow = null;
+        }
+
+        if (restoreTranslationPanel)
+        {
+            RestoreTranslationPanel();
+        }
+    }
+
+    private void RestoreTranslationPanel()
+    {
+        TranslationResultPanel.Visibility = Visibility.Visible;
+        FloatingToggleButton.Content = "悬浮窗";
+
+        if (_translationPanelHeightDelta > 0)
+        {
+            Height = ActualHeight + _translationPanelHeightDelta;
+            _translationPanelHeightDelta = 0;
+        }
+    }
+
+    private void FloatingTranslationWindow_Closed(object? sender, EventArgs e)
+    {
+        _floatingTranslationWindow = null;
+        RestoreTranslationPanel();
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _isClosing = true;
+        CloseFloatingTranslationWindow(restoreTranslationPanel: false);
         _selectionOverlay?.Close();
         _selectionOverlay = null;
         base.OnClosed(e);
