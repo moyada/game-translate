@@ -46,7 +46,6 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
@@ -95,21 +94,7 @@
                  Foreground="{StaticResource MutedTextBrush}" />
     </Grid>
 
-    <StackPanel Grid.Row="2"
-                Margin="0,0,0,18">
-      <TextBlock Foreground="{StaticResource MutedTextBrush}"
-                 Text="{Binding CaptureRegionText}"
-                 TextWrapping="Wrap" />
-      <TextBlock Foreground="{StaticResource MutedTextBrush}"
-                 Text="{Binding CaptureStatusText}"
-                 Margin="0,4,0,0"
-                 TextWrapping="Wrap" />
-      <TextBlock Foreground="{StaticResource MutedTextBrush}"
-                 Text="{Binding CaptureMetricsText}"
-                 Margin="0,4,0,0" />
-    </StackPanel>
-
-    <Grid Grid.Row="3">
+    <Grid Grid.Row="2">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
