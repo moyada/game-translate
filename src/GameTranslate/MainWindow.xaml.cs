@@ -54,6 +54,11 @@ public partial class MainWindow : Window
         }
     }
 
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _isClosing = true;
