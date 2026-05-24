@@ -118,14 +118,30 @@
                  Text="中文结果"
                  FontWeight="SemiBold"
                  Margin="0,0,0,8" />
-      <TextBox Grid.Row="1"
-               Text="{Binding TranslatedText}"
-               AcceptsReturn="True"
-               IsReadOnly="True"
-               TextWrapping="Wrap"
-               VerticalScrollBarVisibility="Auto"
-               VerticalContentAlignment="Top"
-               Background="{Binding ElementName=OpacitySlider, Path=Value, Converter={StaticResource OpacityToBackgroundBrushConverter}, ConverterParameter=White}" />
+      <Border Grid.Row="1"
+              Background="#B3000000"
+              BorderBrush="#4DFFFFFF"
+              BorderThickness="1"
+              CornerRadius="6"
+              Padding="12,10">
+        <TextBox Text="{Binding TranslatedText}"
+                 AcceptsReturn="True"
+                 IsReadOnly="True"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 VerticalContentAlignment="Top"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Padding="0"
+                 Foreground="#F9FAFB"
+                 CaretBrush="#F9FAFB"
+                 SelectionBrush="#66FFFFFF"
+                 SelectionTextBrush="#111827"
+                 FontSize="16"
+                 FontWeight="SemiBold"
+                 LineHeight="24"
+                 TextOptions.TextFormattingMode="Display" />
+      </Border>
     </Grid>
 
   </Grid>
