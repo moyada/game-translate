@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using GameTranslate.ViewModels;
 
 namespace GameTranslate;
@@ -35,6 +36,22 @@ public partial class MainWindow : Window
         _selectionOverlay.Closed += SelectionOverlay_Closed;
         _selectionOverlay.Show();
         viewModel.SetCaptureSelection(_selectionOverlay.SelectedCaptureSelection);
+    }
+
+    private void WindowSurface_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, sender) || e.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
+        try
+        {
+            DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+        }
     }
 
     protected override void OnClosed(EventArgs e)
