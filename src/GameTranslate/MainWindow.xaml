@@ -66,17 +66,24 @@
                  Text="中文结果"
                  FontWeight="SemiBold"
                  Margin="0,0,0,8" />
-      <TextBox Grid.Row="1"
-               Text="{Binding TranslatedText}"
-               AcceptsReturn="True"
-               IsReadOnly="True"
-               TextWrapping="Wrap"
-               VerticalScrollBarVisibility="Auto"
-               VerticalContentAlignment="Top"
-               Background="#F7F8FA"
-               Foreground="#111827"
-               FontSize="16"
-               TextOptions.TextFormattingMode="Display" />
+      <Border Grid.Row="1"
+              Background="#F7F8FA"
+              BorderBrush="#D1D5DB"
+              BorderThickness="1"
+              CornerRadius="6"
+              Padding="12,10">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <TextBlock Text="{Binding TranslatedText}"
+                     TextWrapping="Wrap"
+                     Foreground="#111827"
+                     FontFamily="Microsoft YaHei UI"
+                     FontSize="16"
+                     FontWeight="SemiBold"
+                     LineHeight="24"
+                     LineStackingStrategy="BlockLineHeight"
+                     TextOptions.TextFormattingMode="Display" />
+        </ScrollViewer>
+      </Border>
     </Grid>
 
   </Grid>
