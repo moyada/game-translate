@@ -9,6 +9,7 @@
         WindowStyle="None"
         Background="Transparent"
         AllowsTransparency="True"
+        Topmost="True"
         FontFamily="Microsoft YaHei UI"
         FontSize="14">
   <Window.Resources>
