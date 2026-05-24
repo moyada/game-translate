@@ -6,8 +6,12 @@ namespace GameTranslate;
 
 public partial class MainWindow : Window
 {
+    private const double FallbackPreviewPanelHeight = 136;
+
     private SelectionOverlayWindow? _selectionOverlay;
     private SafeHotKeyMonitor? _hotKeyMonitor;
+    private bool _isPreviewVisible = true;
+    private double _previewPanelHeightDelta;
     private bool _isClosing;
 
     public MainWindow()
@@ -47,6 +51,31 @@ public partial class MainWindow : Window
         _selectionOverlay.Closed += SelectionOverlay_Closed;
         _selectionOverlay.Show();
         viewModel.SetCaptureSelection(_selectionOverlay.SelectedCaptureSelection);
+    }
+
+    private void PreviewToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isPreviewVisible)
+        {
+            _previewPanelHeightDelta = GetPreviewPanelHeightDelta();
+            PreviewPanel.Visibility = Visibility.Collapsed;
+            PreviewToggleButton.Content = "显示 OCR";
+            Height = Math.Max(MinHeight, ActualHeight - _previewPanelHeightDelta);
+            _isPreviewVisible = false;
+            return;
+        }
+
+        PreviewPanel.Visibility = Visibility.Visible;
+        PreviewToggleButton.Content = "隐藏 OCR";
+        Height = ActualHeight + (_previewPanelHeightDelta > 0 ? _previewPanelHeightDelta : FallbackPreviewPanelHeight);
+        _isPreviewVisible = true;
+    }
+
+    private double GetPreviewPanelHeightDelta()
+    {
+        var margin = PreviewPanel.Margin;
+        var height = PreviewPanel.ActualHeight + margin.Top + margin.Bottom;
+        return height > 1 ? height : FallbackPreviewPanelHeight;
     }
 
     protected override void OnClosed(EventArgs e)
