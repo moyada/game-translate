@@ -33,13 +33,15 @@
   </Window.Resources>
 
   <Border Margin="0"
-          Padding="20"
+          Padding="0"
           BorderBrush="#BFD1D5DB"
           BorderThickness="1"
           CornerRadius="8"
           Background="{Binding ElementName=OpacitySlider, Path=Value, Converter={StaticResource OpacityToBackgroundBrushConverter}}"
           MouseLeftButtonDown="WindowSurface_MouseLeftButtonDown">
-  <Grid>
+  <Grid Background="Transparent"
+        MouseLeftButtonDown="WindowSurface_MouseLeftButtonDown">
+  <Grid Margin="20">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -53,7 +55,6 @@
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
       <Button Grid.Column="0"
               Content="选择区域"
@@ -64,19 +65,8 @@
               Command="{Binding ToggleMonitoringCommand}" />
       <Button Grid.Column="2"
               Margin="12,0,0,0"
-              Content="翻译"
+              Content="翻译 (F1)"
               Command="{Binding TranslateCommand}" />
-      <Button Grid.Column="4"
-              Width="17"
-              Height="17"
-              MinWidth="17"
-              Padding="0"
-              HorizontalAlignment="Right"
-              VerticalAlignment="Center"
-              FontSize="10"
-              Background="#DC2626"
-              Content="X"
-              Click="CloseButton_Click" />
     </Grid>
 
     <Grid Grid.Row="1" Margin="0,0,0,18">
@@ -138,6 +128,19 @@
                Background="{Binding ElementName=OpacitySlider, Path=Value, Converter={StaticResource OpacityToBackgroundBrushConverter}, ConverterParameter=White}" />
     </Grid>
 
+  </Grid>
+  <Button Width="17"
+          Height="17"
+          MinWidth="17"
+          Padding="0"
+          Margin="0,15,15,0"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Top"
+          Panel.ZIndex="1"
+          FontSize="10"
+          Background="#DC2626"
+          Content="X"
+          Click="CloseButton_Click" />
   </Grid>
   </Border>
 </Window>

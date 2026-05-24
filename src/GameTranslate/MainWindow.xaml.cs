@@ -12,7 +12,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DataContext = new MainViewModel();
+        var viewModel = new MainViewModel();
+        DataContext = viewModel;
+        InputBindings.Add(new KeyBinding(viewModel.TranslateCommand, Key.F1, ModifierKeys.None));
     }
 
     private void SelectRegion_Click(object sender, RoutedEventArgs e)
