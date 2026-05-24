@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Game Translate"
         Width="560"
-        Height="520"
+        Height="430"
         MinWidth="460"
-        MinHeight="420"
+        MinHeight="340"
         Background="#F7F8FA"
         FontFamily="Microsoft YaHei UI"
         FontSize="14">
@@ -35,27 +35,11 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <StackPanel Grid.Row="0" Margin="0,0,0,16">
-      <TextBlock Text="Game Translate" FontSize="22" FontWeight="SemiBold" />
-      <TextBlock Text="Win10 / Win11 · WPF · LLamaSharp CUDA12"
-                 Foreground="{StaticResource MutedTextBrush}"
-                 Margin="0,4,0,0" />
-      <Border Background="#E5E7EB"
-              CornerRadius="4"
-              Padding="10,6"
-              Margin="0,10,0,0">
-        <TextBlock Text="{Binding StatusText}"
-                   Foreground="{StaticResource MutedTextBrush}"
-                   TextWrapping="Wrap" />
-      </Border>
-    </StackPanel>
-
-    <Grid Grid.Row="1" Margin="0,0,0,18">
+    <Grid Grid.Row="0" Margin="0,0,0,18">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
@@ -75,7 +59,7 @@
               Command="{Binding TranslateCommand}" />
     </Grid>
 
-    <StackPanel Grid.Row="2"
+    <StackPanel Grid.Row="1"
                 Margin="0,0,0,18">
       <TextBlock Foreground="{StaticResource MutedTextBrush}"
                  Text="{Binding CaptureRegionText}"
@@ -89,7 +73,7 @@
                  Margin="0,4,0,0" />
     </StackPanel>
 
-    <Grid Grid.Row="3">
+    <Grid Grid.Row="2">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
@@ -108,7 +92,7 @@
                VerticalContentAlignment="Top" />
     </Grid>
 
-    <TextBlock Grid.Row="4"
+    <TextBlock Grid.Row="3"
                Margin="0,14,0,0"
                Foreground="{StaticResource MutedTextBrush}"
                Text="第一版不选择目标窗口，直接使用全屏透明选择框选定聊天区域；截图、OCR、200ms 轮询会接到同一套区域数据。" />
