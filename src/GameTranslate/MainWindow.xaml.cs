@@ -1,5 +1,5 @@
 using System.Windows;
-using System.Windows.Input;
+using GameTranslate.Services;
 using GameTranslate.ViewModels;
 
 namespace GameTranslate;
@@ -7,6 +7,7 @@ namespace GameTranslate;
 public partial class MainWindow : Window
 {
     private SelectionOverlayWindow? _selectionOverlay;
+    private SafeHotKeyMonitor? _hotKeyMonitor;
     private bool _isClosing;
 
     public MainWindow()
@@ -14,7 +15,15 @@ public partial class MainWindow : Window
         InitializeComponent();
         var viewModel = new MainViewModel();
         DataContext = viewModel;
-        InputBindings.Add(new KeyBinding(viewModel.TranslateCommand, Key.F1, ModifierKeys.None));
+
+        _hotKeyMonitor = new SafeHotKeyMonitor(() => Dispatcher.Invoke(() =>
+        {
+            if (viewModel.TranslateCommand.CanExecute(null))
+            {
+                viewModel.TranslateCommand.Execute(null);
+            }
+        }));
+        _hotKeyMonitor.StartMonitoring();
     }
 
     private void SelectRegion_Click(object sender, RoutedEventArgs e)
@@ -40,27 +49,6 @@ public partial class MainWindow : Window
         viewModel.SetCaptureSelection(_selectionOverlay.SelectedCaptureSelection);
     }
 
-    private void WindowSurface_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (!ReferenceEquals(e.OriginalSource, sender) || e.ChangedButton != MouseButton.Left)
-        {
-            return;
-        }
-
-        try
-        {
-            DragMove();
-        }
-        catch (InvalidOperationException)
-        {
-        }
-    }
-
-    private void CloseButton_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
     protected override void OnClosed(EventArgs e)
     {
         _isClosing = true;
@@ -71,6 +59,9 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        _hotKeyMonitor?.Dispose();
+        _hotKeyMonitor = null;
+
         if (DataContext is IDisposable disposable)
         {
             disposable.Dispose();

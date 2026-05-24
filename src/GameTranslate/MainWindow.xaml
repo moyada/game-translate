@@ -6,10 +6,7 @@
         Height="390"
         MinWidth="460"
         MinHeight="300"
-        WindowStyle="None"
-        Background="Transparent"
-        AllowsTransparency="True"
-        Topmost="True"
+        Background="#F7F8FA"
         FontFamily="Microsoft YaHei UI"
         FontSize="14">
   <Window.Resources>
@@ -33,18 +30,8 @@
     </Style>
   </Window.Resources>
 
-  <Border Margin="0"
-          Padding="0"
-          BorderBrush="#BFD1D5DB"
-          BorderThickness="1"
-          CornerRadius="8"
-          Background="{Binding ElementName=OpacitySlider, Path=Value, Converter={StaticResource OpacityToBackgroundBrushConverter}}"
-          MouseLeftButtonDown="WindowSurface_MouseLeftButtonDown">
-  <Grid Background="Transparent"
-        MouseLeftButtonDown="WindowSurface_MouseLeftButtonDown">
   <Grid Margin="20">
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
@@ -65,36 +52,11 @@
               Command="{Binding ToggleMonitoringCommand}" />
       <Button Grid.Column="2"
               Margin="12,0,0,0"
-              Content="翻译 (F1)"
+              Content="翻译 (Alt+`)"
               Command="{Binding TranslateCommand}" />
     </Grid>
 
-    <Grid Grid.Row="1" Margin="0,0,0,18">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
-      <TextBlock Grid.Column="0"
-                 Text="透明度"
-                 VerticalAlignment="Center"
-                 Foreground="{StaticResource MutedTextBrush}" />
-      <Slider x:Name="OpacitySlider"
-              Grid.Column="1"
-              Margin="12,0"
-              Minimum="0.3"
-              Maximum="1"
-              Value="1"
-              TickFrequency="0.1"
-              IsSnapToTickEnabled="False"
-              VerticalAlignment="Center" />
-      <TextBlock Grid.Column="2"
-                 Text="{Binding ElementName=OpacitySlider, Path=Value, StringFormat={}{0:P0}}"
-                 VerticalAlignment="Center"
-                 Foreground="{StaticResource MutedTextBrush}" />
-    </Grid>
-
-    <Grid Grid.Row="2">
+    <Grid Grid.Row="1">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
@@ -104,44 +66,18 @@
                  Text="中文结果"
                  FontWeight="SemiBold"
                  Margin="0,0,0,8" />
-      <Border Grid.Row="1"
-              Background="#B3000000"
-              BorderBrush="#4DFFFFFF"
-              BorderThickness="1"
-              CornerRadius="6"
-              Padding="12,10">
-        <TextBox Text="{Binding TranslatedText}"
-                 AcceptsReturn="True"
-                 IsReadOnly="True"
-                 TextWrapping="Wrap"
-                 VerticalScrollBarVisibility="Auto"
-                 VerticalContentAlignment="Top"
-                 Background="Transparent"
-                 BorderThickness="0"
-                 Padding="0"
-                 Foreground="#F9FAFB"
-                 CaretBrush="#F9FAFB"
-                 SelectionBrush="#66FFFFFF"
-                 SelectionTextBrush="#111827"
-                 FontSize="16"
-                 FontWeight="SemiBold"
-                 TextOptions.TextFormattingMode="Display" />
-      </Border>
+      <TextBox Grid.Row="1"
+               Text="{Binding TranslatedText}"
+               AcceptsReturn="True"
+               IsReadOnly="True"
+               TextWrapping="Wrap"
+               VerticalScrollBarVisibility="Auto"
+               VerticalContentAlignment="Top"
+               Background="#F7F8FA"
+               Foreground="#111827"
+               FontSize="16"
+               TextOptions.TextFormattingMode="Display" />
     </Grid>
 
   </Grid>
-  <Button Width="17"
-          Height="17"
-          MinWidth="17"
-          Padding="0"
-          Margin="0,15,15,0"
-          HorizontalAlignment="Right"
-          VerticalAlignment="Top"
-          Panel.ZIndex="1"
-          FontSize="10"
-          Background="#DC2626"
-          Content="X"
-          Click="CloseButton_Click" />
-  </Grid>
-  </Border>
 </Window>

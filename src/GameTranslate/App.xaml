@@ -1,12 +1,10 @@
 <Application x:Class="GameTranslate.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:GameTranslate.Converters"
              StartupUri="MainWindow.xaml">
   <Application.Resources>
     <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
     <SolidColorBrush x:Key="TextBrush" Color="#1F2937" />
     <SolidColorBrush x:Key="MutedTextBrush" Color="#6B7280" />
-    <converters:OpacityToBackgroundBrushConverter x:Key="OpacityToBackgroundBrushConverter" />
   </Application.Resources>
 </Application>
