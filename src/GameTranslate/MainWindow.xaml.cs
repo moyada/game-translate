@@ -1,24 +1,30 @@
 using System.Windows;
 using System.ComponentModel;
+using System.Windows.Controls;
+using System.Windows.Input;
 using GameTranslate.Services;
+using GameTranslate.Models;
 using GameTranslate.ViewModels;
+using Forms = System.Windows.Forms;
+using WpfPoint = System.Windows.Point;
 
 namespace GameTranslate;
 
 public partial class MainWindow : Window
 {
     private const double FallbackPreviewPanelHeight = 136;
-    private const double FallbackTranslationPanelHeight = 170;
     private const double AgentCardMinimumWindowHeight = 520;
     private const double StartupScreenMargin = 16;
 
-    private SelectionOverlayWindow? _selectionOverlay;
-    private FloatingTranslationWindow? _floatingTranslationWindow;
+    private readonly ScreenCaptureService _selectionPreviewCaptureService = new();
     private SafeHotKeyMonitor? _hotKeyMonitor;
     private bool _isPreviewVisible;
+    private bool _isSelectingRegion;
     private double _previewPanelHeightDelta = FallbackPreviewPanelHeight;
-    private double _translationPanelHeightDelta;
     private double _heightBeforeAgentCard;
+    private CapturedFrame? _selectionPreviewFrame;
+    private CaptureRegion _selectionScreenRegion;
+    private WpfPoint? _selectionDragStart;
 
     public MainWindow()
     {
@@ -53,27 +59,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SelectRegion_Click(object sender, RoutedEventArgs e)
+    private async void SelectRegion_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel viewModel)
         {
             return;
         }
 
-        if (_selectionOverlay is { IsVisible: true })
-        {
-            _selectionOverlay.Close();
-            return;
-        }
-
-        _selectionOverlay = new SelectionOverlayWindow(viewModel.CaptureSelection.DisplayRegion)
-        {
-            Owner = this
-        };
-        _selectionOverlay.SelectionChanged += (_, selection) => viewModel.SetCaptureSelection(selection);
-        _selectionOverlay.Closed += SelectionOverlay_Closed;
-        _selectionOverlay.Show();
-        viewModel.SetCaptureSelection(_selectionOverlay.SelectedCaptureSelection);
+        await BeginRegionSelectionAsync(viewModel);
     }
 
     private void PreviewToggleButton_Click(object sender, RoutedEventArgs e)
@@ -99,94 +92,6 @@ public partial class MainWindow : Window
         var margin = PreviewPanel.Margin;
         var height = PreviewPanel.ActualHeight + margin.Top + margin.Bottom;
         return height > 1 ? height : FallbackPreviewPanelHeight;
-    }
-
-    private void FloatingToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_floatingTranslationWindow is { IsVisible: true })
-        {
-            CloseFloatingTranslationWindow(restoreTranslationPanel: true);
-            return;
-        }
-
-        ShowFloatingTranslationWindow();
-    }
-
-    private void ShowFloatingTranslationWindow()
-    {
-        if (_floatingTranslationWindow is { IsVisible: true })
-        {
-            return;
-        }
-
-        _translationPanelHeightDelta = CollapseTranslationPanelAndShrinkWindow();
-        FloatingToggleButton.Content = "关闭悬浮窗";
-
-        _floatingTranslationWindow = new FloatingTranslationWindow
-        {
-            Owner = this,
-            DataContext = DataContext
-        };
-        _floatingTranslationWindow.Closed += FloatingTranslationWindow_Closed;
-        CenterFloatingTranslationWindow(_floatingTranslationWindow);
-        _floatingTranslationWindow.Show();
-    }
-
-    private static void CenterFloatingTranslationWindow(Window window)
-    {
-        var workArea = SystemParameters.WorkArea;
-        window.Left = workArea.Left + (workArea.Width - window.Width) / 2;
-        window.Top = workArea.Top + (workArea.Height - window.Height) / 2;
-    }
-
-    private double CollapseTranslationPanelAndShrinkWindow()
-    {
-        var heightDelta = GetTranslationPanelHeightDelta();
-        TranslationResultPanel.Visibility = Visibility.Collapsed;
-
-        var previousHeight = ActualHeight;
-        Height = Math.Max(MinHeight, ActualHeight - heightDelta);
-        return Math.Max(0, previousHeight - Height);
-    }
-
-    private double GetTranslationPanelHeightDelta()
-    {
-        var margin = TranslationResultPanel.Margin;
-        var height = TranslationResultPanel.ActualHeight + margin.Top + margin.Bottom;
-        return height > 1 ? height : FallbackTranslationPanelHeight;
-    }
-
-    private void CloseFloatingTranslationWindow(bool restoreTranslationPanel)
-    {
-        if (_floatingTranslationWindow is not null)
-        {
-            _floatingTranslationWindow.Closed -= FloatingTranslationWindow_Closed;
-            _floatingTranslationWindow.Close();
-            _floatingTranslationWindow = null;
-        }
-
-        if (restoreTranslationPanel)
-        {
-            RestoreTranslationPanel();
-        }
-    }
-
-    private void RestoreTranslationPanel()
-    {
-        TranslationResultPanel.Visibility = Visibility.Visible;
-        FloatingToggleButton.Content = "悬浮窗";
-
-        if (_translationPanelHeightDelta > 0)
-        {
-            Height = ActualHeight + _translationPanelHeightDelta;
-            _translationPanelHeightDelta = 0;
-        }
-    }
-
-    private void FloatingTranslationWindow_Closed(object? sender, EventArgs e)
-    {
-        _floatingTranslationWindow = null;
-        RestoreTranslationPanel();
     }
 
     private void AgentCardButton_Click(object sender, RoutedEventArgs e)
@@ -227,10 +132,19 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        CloseFloatingTranslationWindow(restoreTranslationPanel: false);
-        _selectionOverlay?.Close();
-        _selectionOverlay = null;
         base.OnClosed(e);
+    }
+
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
+    {
+        if (_isSelectingRegion && e.Key == Key.Escape)
+        {
+            ExitRegionSelectionMode(clearImage: true);
+            e.Handled = true;
+            return;
+        }
+
+        base.OnPreviewKeyDown(e);
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -251,8 +165,143 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
-    private void SelectionOverlay_Closed(object? sender, EventArgs e)
+    private async Task BeginRegionSelectionAsync(MainViewModel viewModel)
     {
-        _selectionOverlay = null;
+        if (_isSelectingRegion)
+        {
+            ExitRegionSelectionMode(clearImage: true);
+            return;
+        }
+
+        var screenRegion = GetVirtualScreenPixelRegion();
+        CapturedFrame frame;
+        try
+        {
+            Hide();
+            await Task.Delay(150);
+            frame = await Task.Run(() => _selectionPreviewCaptureService.Capture(screenRegion));
+        }
+        catch (Exception ex)
+        {
+            viewModel.StatusText = "截图预览失败";
+            viewModel.TranslatedText = ExceptionFormatter.Format(ex);
+            return;
+        }
+        finally
+        {
+            Show();
+            Activate();
+        }
+
+        _selectionScreenRegion = screenRegion;
+        _selectionPreviewFrame = frame;
+        RegionSelectionImage.Source = frame.Preview;
+        RegionSelectionRectangle.Visibility = Visibility.Collapsed;
+        RegionSelectionPanel.Visibility = Visibility.Visible;
+        _isSelectingRegion = true;
+    }
+
+    private static CaptureRegion GetVirtualScreenPixelRegion()
+    {
+        var bounds = Forms.SystemInformation.VirtualScreen;
+        return new CaptureRegion(bounds.Left, bounds.Top, bounds.Width, bounds.Height);
+    }
+
+    private void RegionSelectionViewport_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isSelectingRegion)
+        {
+            return;
+        }
+
+        _selectionDragStart = e.GetPosition(RegionSelectionViewport);
+        RegionSelectionViewport.CaptureMouse();
+        UpdateRegionSelectionRectangle(_selectionDragStart.Value);
+    }
+
+    private void RegionSelectionViewport_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (_selectionDragStart is null || !RegionSelectionViewport.IsMouseCaptured)
+        {
+            return;
+        }
+
+        UpdateRegionSelectionRectangle(e.GetPosition(RegionSelectionViewport));
+    }
+
+    private void RegionSelectionViewport_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_selectionDragStart is null || _selectionPreviewFrame is null)
+        {
+            return;
+        }
+
+        var current = e.GetPosition(RegionSelectionViewport);
+        var dragRegion = CaptureRegion.Normalize(
+            _selectionDragStart.Value.X,
+            _selectionDragStart.Value.Y,
+            current.X - _selectionDragStart.Value.X,
+            current.Y - _selectionDragStart.Value.Y);
+
+        RegionSelectionViewport.ReleaseMouseCapture();
+        _selectionDragStart = null;
+
+        var selection = PreviewSelectionMapper.CreateSelection(
+            _selectionScreenRegion,
+            _selectionPreviewFrame.Width,
+            _selectionPreviewFrame.Height,
+            RegionSelectionViewport.ActualWidth,
+            RegionSelectionViewport.ActualHeight,
+            dragRegion);
+
+        if (selection.IsEmpty)
+        {
+            RegionSelectionRectangle.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.SetCaptureSelection(selection);
+        }
+
+        ExitRegionSelectionMode(clearImage: true);
+    }
+
+    private void UpdateRegionSelectionRectangle(WpfPoint current)
+    {
+        if (_selectionDragStart is null)
+        {
+            return;
+        }
+
+        var region = CaptureRegion.Normalize(
+            _selectionDragStart.Value.X,
+            _selectionDragStart.Value.Y,
+            current.X - _selectionDragStart.Value.X,
+            current.Y - _selectionDragStart.Value.Y)
+            .Clamp(0, 0, RegionSelectionViewport.ActualWidth, RegionSelectionViewport.ActualHeight);
+
+        Canvas.SetLeft(RegionSelectionRectangle, region.X);
+        Canvas.SetTop(RegionSelectionRectangle, region.Y);
+        RegionSelectionRectangle.Width = region.Width;
+        RegionSelectionRectangle.Height = region.Height;
+        RegionSelectionRectangle.Visibility = region.IsEmpty ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ExitRegionSelectionMode(bool clearImage)
+    {
+        RegionSelectionViewport.ReleaseMouseCapture();
+        RegionSelectionPanel.Visibility = Visibility.Collapsed;
+        RegionSelectionRectangle.Visibility = Visibility.Collapsed;
+        _selectionDragStart = null;
+        _isSelectingRegion = false;
+
+        if (clearImage)
+        {
+            RegionSelectionImage.Source = null;
+            _selectionPreviewFrame = null;
+            _selectionScreenRegion = default;
+        }
     }
 }

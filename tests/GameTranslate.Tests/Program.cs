@@ -13,6 +13,8 @@ var tests = new List<(string Name, Action Test)>
     ("capture region display", CaptureRegionDisplay),
     ("coordinate scaler scales capture region", CoordinateScalerScalesCaptureRegion),
     ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
+    ("preview selection maps letterboxed drag to screen pixels", PreviewSelectionMapsLetterboxedDragToScreenPixels),
+    ("preview selection clamps drag to displayed image", PreviewSelectionClampsDragToDisplayedImage),
     ("monitoring start requires selection", MonitoringStartRequiresSelection),
     ("translate requires selection", TranslateRequiresSelection),
     ("translate command refreshes on selection", TranslateCommandRefreshesOnSelection),
@@ -33,7 +35,7 @@ var tests = new List<(string Name, Action Test)>
     ("paddle ocr recreates engine after failure", PaddleOcrRecreatesEngineAfterFailure),
     ("paddle ocr recreates engine after recognition", PaddleOcrRecreatesEngineAfterRecognition),
     ("paddle ocr failure message supports manual retry", PaddleOcrFailureMessageSupportsManualRetry),
-    ("selection overlay behavior", SelectionOverlayBehaviorFlags),
+    ("main window selection mode policy", MainWindowSelectionModePolicy),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
     ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
@@ -146,6 +148,34 @@ static void CaptureSelectionDisplayIncludesScale()
     var text = selection.ToDisplayText();
     Assert(text.Contains("X=15, Y=30, W=150, H=75", StringComparison.Ordinal), text);
     Assert(text.Contains("缩放 150% x 150%", StringComparison.Ordinal), text);
+}
+
+static void PreviewSelectionMapsLetterboxedDragToScreenPixels()
+{
+    var selection = PreviewSelectionMapper.CreateSelection(
+        new CaptureRegion(100, 200, 2000, 1000),
+        imagePixelWidth: 2000,
+        imagePixelHeight: 1000,
+        viewportWidth: 500,
+        viewportHeight: 300,
+        dragRegion: new CaptureRegion(50, 50, 200, 100));
+
+    Assert(selection.PixelRegion.ToDisplayText() == "X=300, Y=300, W=800, H=400", selection.PixelRegion.ToDisplayText());
+    Assert(selection.ScaleX == 4.0, selection.ScaleX.ToString("0.###"));
+    Assert(selection.ScaleY == 4.0, selection.ScaleY.ToString("0.###"));
+}
+
+static void PreviewSelectionClampsDragToDisplayedImage()
+{
+    var selection = PreviewSelectionMapper.CreateSelection(
+        new CaptureRegion(0, 0, 2000, 1000),
+        imagePixelWidth: 2000,
+        imagePixelHeight: 1000,
+        viewportWidth: 500,
+        viewportHeight: 300,
+        dragRegion: new CaptureRegion(-20, 10, 140, 80));
+
+    Assert(selection.PixelRegion.ToDisplayText() == "X=0, Y=0, W=480, H=260", selection.PixelRegion.ToDisplayText());
 }
 
 static void MonitoringStartRequiresSelection()
@@ -387,11 +417,12 @@ static void PaddleOcrFailureMessageSupportsManualRetry()
     Assert(PaddleSharpOcrService.FailureMessage.Contains("重新开始监控", StringComparison.Ordinal), PaddleSharpOcrService.FailureMessage);
 }
 
-static void SelectionOverlayBehaviorFlags()
+static void MainWindowSelectionModePolicy()
 {
-    Assert(!SelectionOverlayBehavior.ShowsConfirmButtons, "selection overlay should not show confirm/cancel buttons");
-    Assert(!SelectionOverlayBehavior.ShowsInstructionText, "selection overlay should not show instruction text");
-    Assert(SelectionOverlayBehavior.AllowsClickThroughOutsideSelection, "selection overlay should pass clicks outside the selection through");
+    Assert(MainWindowSelectionMode.UsesMainWindowPreview, "region selection should use a main-window screenshot preview");
+    Assert(!MainWindowSelectionMode.UsesTopmostOverlayWindow, "region selection should not use a transparent topmost overlay window");
+    Assert(MainWindowSelectionMode.SavesSelectionOnMouseRelease, "region selection should save after dragging a rectangle");
+    Assert(MainWindowSelectionMode.CanCancelWithEscape, "region selection should allow Esc cancellation without an extra window");
 }
 
 static void OcrTextNormalizerTrimsAndDropsBlankLines()

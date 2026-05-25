@@ -277,11 +277,6 @@
                 Style="{StaticResource SecondaryButtonStyle}"
                 Content="显示识别"
                 Click="PreviewToggleButton_Click" />
-        <Button x:Name="FloatingToggleButton"
-                Margin="10,0,0,0"
-                Style="{StaticResource SecondaryButtonStyle}"
-                Content="悬浮窗"
-                Click="FloatingToggleButton_Click" />
       </StackPanel>
 
       <Button HorizontalAlignment="Right"
@@ -341,6 +336,45 @@
                        FontSize="14"
                        Foreground="#374151" />
           </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <Grid x:Name="RegionSelectionPanel"
+          Grid.RowSpan="4"
+          Panel.ZIndex="20"
+          Visibility="Collapsed"
+          Background="#F7F8FA">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+      <TextBlock Grid.Row="0"
+                 Text="拖动截图选择区域"
+                 FontWeight="SemiBold"
+                 Margin="0,0,0,10" />
+
+      <Border Grid.Row="1"
+              Background="#111827"
+              BorderBrush="#D1D5DB"
+              BorderThickness="1"
+              CornerRadius="6">
+        <Grid x:Name="RegionSelectionViewport"
+              ClipToBounds="True"
+              MouseLeftButtonDown="RegionSelectionViewport_MouseLeftButtonDown"
+              MouseMove="RegionSelectionViewport_MouseMove"
+              MouseLeftButtonUp="RegionSelectionViewport_MouseLeftButtonUp">
+          <Image x:Name="RegionSelectionImage"
+                 Stretch="Uniform"
+                 RenderOptions.BitmapScalingMode="HighQuality" />
+          <Canvas IsHitTestVisible="False">
+            <Rectangle x:Name="RegionSelectionRectangle"
+                       Visibility="Collapsed"
+                       Stroke="#2563EB"
+                       StrokeThickness="2"
+                       Fill="Transparent" />
+          </Canvas>
         </Grid>
       </Border>
     </Grid>
