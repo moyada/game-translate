@@ -4,7 +4,7 @@
         Title="Game Translate"
         Icon="Resources/Icons/logo.ico"
         Width="560"
-        Height="560"
+        Height="424"
         MinWidth="460"
         MinHeight="160"
         Background="#F7F8FA"
@@ -143,7 +143,8 @@
 
     <Grid x:Name="PreviewPanel"
           Grid.Row="1"
-          Margin="0,0,0,18">
+          Margin="0,0,0,18"
+          Visibility="Collapsed">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="*" />
@@ -235,7 +236,7 @@
                 MinWidth="84"
                 Height="28"
                 Padding="10,0"
-                Content="隐藏识别"
+                Content="显示识别"
                 Click="PreviewToggleButton_Click" />
         <Button x:Name="FloatingToggleButton"
                 Margin="10,0,0,0"

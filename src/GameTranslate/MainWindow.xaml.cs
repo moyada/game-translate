@@ -15,8 +15,8 @@ public partial class MainWindow : Window
     private SelectionOverlayWindow? _selectionOverlay;
     private FloatingTranslationWindow? _floatingTranslationWindow;
     private SafeHotKeyMonitor? _hotKeyMonitor;
-    private bool _isPreviewVisible = true;
-    private double _previewPanelHeightDelta;
+    private bool _isPreviewVisible;
+    private double _previewPanelHeightDelta = FallbackPreviewPanelHeight;
     private double _translationPanelHeightDelta;
     private double _heightBeforeAgentCard;
 
