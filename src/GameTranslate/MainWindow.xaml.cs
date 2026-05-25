@@ -6,6 +6,9 @@ using GameTranslate.Services;
 using GameTranslate.Models;
 using GameTranslate.ViewModels;
 using Forms = System.Windows.Forms;
+using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using WpfMouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
+using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
 using WpfPoint = System.Windows.Point;
 
 namespace GameTranslate;
@@ -135,7 +138,7 @@ public partial class MainWindow : Window
         base.OnClosed(e);
     }
 
-    protected override void OnPreviewKeyDown(KeyEventArgs e)
+    protected override void OnPreviewKeyDown(WpfKeyEventArgs e)
     {
         if (_isSelectingRegion && e.Key == Key.Escape)
         {
@@ -207,7 +210,7 @@ public partial class MainWindow : Window
         return new CaptureRegion(bounds.Left, bounds.Top, bounds.Width, bounds.Height);
     }
 
-    private void RegionSelectionViewport_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void RegionSelectionViewport_MouseLeftButtonDown(object sender, WpfMouseButtonEventArgs e)
     {
         if (!_isSelectingRegion)
         {
@@ -219,7 +222,7 @@ public partial class MainWindow : Window
         UpdateRegionSelectionRectangle(_selectionDragStart.Value);
     }
 
-    private void RegionSelectionViewport_MouseMove(object sender, MouseEventArgs e)
+    private void RegionSelectionViewport_MouseMove(object sender, WpfMouseEventArgs e)
     {
         if (_selectionDragStart is null || !RegionSelectionViewport.IsMouseCaptured)
         {
@@ -229,7 +232,7 @@ public partial class MainWindow : Window
         UpdateRegionSelectionRectangle(e.GetPosition(RegionSelectionViewport));
     }
 
-    private void RegionSelectionViewport_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    private void RegionSelectionViewport_MouseLeftButtonUp(object sender, WpfMouseButtonEventArgs e)
     {
         if (_selectionDragStart is null || _selectionPreviewFrame is null)
         {
