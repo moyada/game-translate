@@ -257,7 +257,7 @@
                      FontFamily="Microsoft YaHei UI"
                      FontSize="15"
                      FontWeight="SemiBold"
-                     LineHeight="24"
+                     LineHeight="26"
                      LineStackingStrategy="BlockLineHeight"
                      TextOptions.TextFormattingMode="Display" />
         </ScrollViewer>
