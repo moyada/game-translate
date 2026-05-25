@@ -125,12 +125,18 @@ public partial class MainWindow : Window
         _floatingTranslationWindow = new FloatingTranslationWindow
         {
             Owner = this,
-            DataContext = DataContext,
-            Left = Left + 24,
-            Top = Top + 80
+            DataContext = DataContext
         };
         _floatingTranslationWindow.Closed += FloatingTranslationWindow_Closed;
+        CenterFloatingTranslationWindow(_floatingTranslationWindow);
         _floatingTranslationWindow.Show();
+    }
+
+    private static void CenterFloatingTranslationWindow(Window window)
+    {
+        var workArea = SystemParameters.WorkArea;
+        window.Left = workArea.Left + (workArea.Width - window.Width) / 2;
+        window.Top = workArea.Top + (workArea.Height - window.Height) / 2;
     }
 
     private double CollapseTranslationPanelAndShrinkWindow()

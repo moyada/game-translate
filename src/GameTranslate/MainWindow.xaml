@@ -70,6 +70,42 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+      <Setter Property="MinWidth" Value="84" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Background" Value="#F9FAFB" />
+      <Setter Property="BorderBrush" Value="#D1D5DB" />
+      <Setter Property="Foreground" Value="#374151" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="SecondaryChrome"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="4">
+              <ContentPresenter HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                Margin="{TemplateBinding Padding}"
+                                RecognizesAccessKey="True" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="SecondaryChrome" Property="Background" Value="#F3F4F6" />
+                <Setter TargetName="SecondaryChrome" Property="BorderBrush" Value="#9CA3AF" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="SecondaryChrome" Property="Background" Value="#E5E7EB" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
     <Style x:Key="CloseButtonStyle" TargetType="Button">
       <Setter Property="Width" Value="28" />
       <Setter Property="Height" Value="28" />
@@ -233,16 +269,12 @@
       <StackPanel Orientation="Horizontal"
                   HorizontalAlignment="Left">
         <Button x:Name="PreviewToggleButton"
-                MinWidth="84"
-                Height="28"
-                Padding="10,0"
+                Style="{StaticResource SecondaryButtonStyle}"
                 Content="显示识别"
                 Click="PreviewToggleButton_Click" />
         <Button x:Name="FloatingToggleButton"
                 Margin="10,0,0,0"
-                MinWidth="84"
-                Height="28"
-                Padding="10,0"
+                Style="{StaticResource SecondaryButtonStyle}"
                 Content="悬浮窗"
                 Click="FloatingToggleButton_Click" />
       </StackPanel>
