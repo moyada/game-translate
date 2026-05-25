@@ -3,8 +3,8 @@ using GameTranslate.Models;
 using OpenCvSharp;
 using Sdcb.PaddleInference;
 using Sdcb.PaddleOCR;
+using Sdcb.PaddleOCR.Models;
 using Sdcb.PaddleOCR.Models.Local;
-using CvSize = OpenCvSharp.Size;
 
 namespace GameTranslate.Services;
 
@@ -12,13 +12,9 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 {
     public const string PreviewLabel = "PaddleOCR 输入预览";
 
-    public const double InputScaleFactor = 3.0;
+    public const string RecognitionModelName = "en_PP-OCRv5_mobile_rec";
 
-    public const bool UsesLightContrastEnhancement = true;
-
-    public const double ContrastClipLimit = 3.0;
-
-    public const double SharpenAmount = 0.55;
+    public const bool UsesImagePreprocessing = false;
 
     public const bool RecreatesEngineAfterFailure = true;
 
@@ -77,7 +73,7 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 
     private static PaddleOcrAll CreateOcr()
     {
-        return new PaddleOcrAll(LocalFullModels.EnglishV3, PaddleDevice.Mkldnn())
+        return new PaddleOcrAll(CreateEnglishV5Model(), PaddleDevice.Mkldnn())
         {
             AllowRotateDetection = false,
             Enable180Classification = false
@@ -88,18 +84,12 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var bgra = CreateBgraMat(frame);
-        using var bgr = new Mat();
-        using var enlarged = new Mat();
-        using var enhanced = new Mat();
-        Cv2.CvtColor(bgra, bgr, ColorConversionCodes.BGRA2BGR);
-        Cv2.Resize(bgr, enlarged, new CvSize(), InputScaleFactor, InputScaleFactor, InterpolationFlags.Cubic);
-        EnhanceGameChatText(enlarged, enhanced);
+        using var bgr = CreateBgrMat(frame);
 
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var result = GetOrCreateOcr().Run(enhanced);
+            var result = GetOrCreateOcr().Run(bgr);
             cancellationToken.ThrowIfCancellationRequested();
             return OcrTextNormalizer.NormalizeLines(SplitLines(result.Text));
         }
@@ -128,47 +118,35 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
         }
     }
 
-    private static Mat CreateBgraMat(CapturedFrame frame)
+    private static FullOcrModel CreateEnglishV5Model()
     {
-        var mat = new Mat(frame.Height, frame.Width, MatType.CV_8UC4);
-        var rowBytes = frame.Width * 4;
+        return new FullOcrModel(
+            LocalDetectionModel.ChineseV5,
+            new LocalRecognizationModel(RecognitionModelName, string.Empty, ModelVersion.V5));
+    }
+
+    private static Mat CreateBgrMat(CapturedFrame frame)
+    {
+        var mat = new Mat(frame.Height, frame.Width, MatType.CV_8UC3);
+        var rowBytes = frame.Width * 3;
+        var pixels = new byte[frame.Height * rowBytes];
 
         for (var y = 0; y < frame.Height; y++)
         {
             var sourceOffset = y * frame.Stride;
             var targetOffset = y * rowBytes;
-            Marshal.Copy(frame.BgraPixels, sourceOffset, IntPtr.Add(mat.Data, targetOffset), rowBytes);
-        }
-
-        return mat;
-    }
-
-    private static void EnhanceGameChatText(Mat input, Mat output)
-    {
-        using var lab = new Mat();
-        using var enhancedLab = new Mat();
-        using var sharpened = new Mat();
-        using var blurred = new Mat();
-        Cv2.CvtColor(input, lab, ColorConversionCodes.BGR2Lab);
-
-        var channels = Cv2.Split(lab);
-        try
-        {
-            using var clahe = Cv2.CreateCLAHE(clipLimit: ContrastClipLimit, tileGridSize: new CvSize(8, 8));
-            clahe.Apply(channels[0], channels[0]);
-            Cv2.Merge(channels, enhancedLab);
-            Cv2.CvtColor(enhancedLab, sharpened, ColorConversionCodes.Lab2BGR);
-        }
-        finally
-        {
-            foreach (var channel in channels)
+            for (var x = 0; x < frame.Width; x++)
             {
-                channel.Dispose();
+                var sourcePixel = sourceOffset + x * 4;
+                var targetPixel = targetOffset + x * 3;
+                pixels[targetPixel] = frame.BgraPixels[sourcePixel];
+                pixels[targetPixel + 1] = frame.BgraPixels[sourcePixel + 1];
+                pixels[targetPixel + 2] = frame.BgraPixels[sourcePixel + 2];
             }
         }
 
-        Cv2.GaussianBlur(sharpened, blurred, new CvSize(0, 0), 1.0);
-        Cv2.AddWeighted(sharpened, 1.0 + SharpenAmount, blurred, -SharpenAmount, 0, output);
+        Marshal.Copy(pixels, 0, mat.Data, pixels.Length);
+        return mat;
     }
 
     private static IEnumerable<string> SplitLines(string text)

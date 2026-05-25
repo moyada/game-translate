@@ -28,8 +28,8 @@ var tests = new List<(string Name, Action Test)>
     ("image change detector three percent threshold", ImageChangeDetectorThreePercentThreshold),
     ("monitoring force translation policy", MonitoringForceTranslationPolicy),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
-    ("paddle ocr upscale factor", PaddleOcrUpscaleFactor),
-    ("paddle ocr light contrast enhancement", PaddleOcrLightContrastEnhancement),
+    ("paddle ocr uses english v5 recognition", PaddleOcrUsesEnglishV5Recognition),
+    ("paddle ocr disables image preprocessing", PaddleOcrDisablesImagePreprocessing),
     ("paddle ocr recreates engine after failure", PaddleOcrRecreatesEngineAfterFailure),
     ("paddle ocr recreates engine after recognition", PaddleOcrRecreatesEngineAfterRecognition),
     ("paddle ocr failure message supports manual retry", PaddleOcrFailureMessageSupportsManualRetry),
@@ -43,6 +43,7 @@ var tests = new List<(string Name, Action Test)>
     ("chat speaker prefix stripped", ChatSpeakerPrefixStripped),
     ("chat speaker prefix restored", ChatSpeakerPrefixRestored),
     ("chat speaker prefix only colon", ChatSpeakerPrefixOnlyColon),
+    ("chat speaker prefix restores misread colon punctuation", ChatSpeakerPrefixRestoresMisreadColonPunctuation),
     ("chat at mention prefix preserved", ChatAtMentionPrefixPreserved),
     ("maplestory colon speaker prefixes", MapleStoryColonSpeakerPrefixes),
     ("maplestory glossary prompt content", MapleStoryGlossaryPromptContent),
@@ -360,16 +361,14 @@ static void PaddleOcrPreviewLabel()
     Assert(PaddleSharpOcrService.PreviewLabel == "PaddleOCR 输入预览", PaddleSharpOcrService.PreviewLabel);
 }
 
-static void PaddleOcrUpscaleFactor()
+static void PaddleOcrUsesEnglishV5Recognition()
 {
-    Assert(PaddleSharpOcrService.InputScaleFactor == 3.0, "PaddleOCR should upscale small game text");
+    Assert(PaddleSharpOcrService.RecognitionModelName == "en_PP-OCRv5_mobile_rec", PaddleSharpOcrService.RecognitionModelName);
 }
 
-static void PaddleOcrLightContrastEnhancement()
+static void PaddleOcrDisablesImagePreprocessing()
 {
-    Assert(PaddleSharpOcrService.UsesLightContrastEnhancement, "PaddleOCR should enhance low-contrast game chat text");
-    Assert(PaddleSharpOcrService.ContrastClipLimit >= 3.0, "PaddleOCR contrast should be stronger for low-contrast chat");
-    Assert(PaddleSharpOcrService.SharpenAmount >= 0.55, "PaddleOCR sharpen amount should preserve small punctuation");
+    Assert(!PaddleSharpOcrService.UsesImagePreprocessing, "PaddleOCR should receive the captured image without resize/contrast/sharpen preprocessing");
 }
 
 static void PaddleOcrRecreatesEngineAfterFailure()
@@ -483,10 +482,6 @@ static void ChatSpeakerPrefixRestored()
 
 static void ChatSpeakerPrefixOnlyColon()
 {
-    var semicolon = TranslationSourceNormalizer.Parse("Steam ; ew you have cooties");
-    Assert(semicolon.SpeakerPrefix is null, semicolon.SpeakerPrefix ?? "unexpected speaker");
-    Assert(semicolon.TranslatableText == "Steam ; ew you have cooties", semicolon.TranslatableText);
-
     var space = TranslationSourceNormalizer.Parse("Steam ew you have cooties");
     Assert(space.SpeakerPrefix is null, space.SpeakerPrefix ?? "unexpected speaker");
     Assert(space.TranslatableText == "Steam ew you have cooties", space.TranslatableText);
@@ -498,6 +493,20 @@ static void ChatSpeakerPrefixOnlyColon()
     var greeting = TranslationSourceNormalizer.Parse("Hello team");
     Assert(greeting.SpeakerPrefix is null, greeting.SpeakerPrefix ?? "unexpected speaker");
     Assert(greeting.TranslatableText == "Hello team", greeting.TranslatableText);
+}
+
+static void ChatSpeakerPrefixRestoresMisreadColonPunctuation()
+{
+    var middleDot = TranslationSourceNormalizer.Parse("LordLemon · Tako kill it");
+    Assert(middleDot.SpeakerPrefix == "LordLemon", middleDot.SpeakerPrefix ?? "missing speaker");
+    Assert(middleDot.TranslatableText == "Tako kill it", middleDot.TranslatableText);
+
+    var semicolon = TranslationSourceNormalizer.Parse("LordLemon ; Tako kill it");
+    Assert(semicolon.SpeakerPrefix == "LordLemon", semicolon.SpeakerPrefix ?? "missing speaker");
+    Assert(semicolon.TranslatableText == "Tako kill it", semicolon.TranslatableText);
+
+    var restored = TranslationSourceNormalizer.ApplySpeakerPrefix("LordLemon · Tako kill it", "塔科，干掉它");
+    Assert(restored == "LordLemon：塔科，干掉它", restored);
 }
 
 static void ChatAtMentionPrefixPreserved()

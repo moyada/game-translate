@@ -69,11 +69,22 @@ public static partial class TranslationSourceNormalizer
                 explicitMatch.Groups["speaker"].Value.Trim());
         }
 
+        var misreadColonMatch = MisreadColonSpeakerPrefixRegex().Match(trimmed);
+        if (misreadColonMatch.Success)
+        {
+            return TranslationSourceLineContext.WithSpeaker(
+                misreadColonMatch.Groups["message"].Value.Trim(),
+                misreadColonMatch.Groups["speaker"].Value.Trim());
+        }
+
         return new TranslationSourceLineContext(trimmed, null);
     }
 
     [GeneratedRegex(@"^\s*(?<speaker>@?[A-Za-z0-9][A-Za-z0-9_\-.]{1,31})\s*[:：]\s*(?<message>.+)$")]
     private static partial Regex ExplicitSpeakerPrefixRegex();
+
+    [GeneratedRegex(@"^\s*(?<speaker>@?[A-Za-z0-9][A-Za-z0-9_\-.]{1,31})\s*[·;]\s*(?<message>.+)$")]
+    private static partial Regex MisreadColonSpeakerPrefixRegex();
 }
 
 public sealed record TranslationSourceContext(string TranslatableText, string?[] SpeakerPrefixes)
