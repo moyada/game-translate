@@ -29,7 +29,9 @@
 
   <ItemGroup>
     <None Remove="Resources\Icons\logo.ico" />
+    <None Remove="Resources\Images\agent-qr.jpg" />
     <Resource Include="Resources\Icons\logo.ico" />
+    <Resource Include="Resources\Images\agent-qr.jpg" />
     <None Include="Models\*.gguf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="Resources\Glossary\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

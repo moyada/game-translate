@@ -9,6 +9,7 @@ public partial class MainWindow : Window
 {
     private const double FallbackPreviewPanelHeight = 136;
     private const double FallbackTranslationPanelHeight = 170;
+    private const double AgentCardMinimumWindowHeight = 520;
     private const double StartupScreenMargin = 16;
 
     private SelectionOverlayWindow? _selectionOverlay;
@@ -17,6 +18,7 @@ public partial class MainWindow : Window
     private bool _isPreviewVisible = true;
     private double _previewPanelHeightDelta;
     private double _translationPanelHeightDelta;
+    private double _heightBeforeAgentCard;
 
     public MainWindow()
     {
@@ -179,6 +181,27 @@ public partial class MainWindow : Window
     {
         _floatingTranslationWindow = null;
         RestoreTranslationPanel();
+    }
+
+    private void AgentCardButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ActualHeight < AgentCardMinimumWindowHeight)
+        {
+            _heightBeforeAgentCard = ActualHeight;
+            Height = AgentCardMinimumWindowHeight;
+        }
+
+        AgentCardOverlay.Visibility = Visibility.Visible;
+    }
+
+    private void CloseAgentCardButton_Click(object sender, RoutedEventArgs e)
+    {
+        AgentCardOverlay.Visibility = Visibility.Collapsed;
+        if (_heightBeforeAgentCard > 0)
+        {
+            Height = Math.Max(MinHeight, _heightBeforeAgentCard);
+            _heightBeforeAgentCard = 0;
+        }
     }
 
     protected override void OnClosed(EventArgs e)

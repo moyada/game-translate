@@ -145,24 +145,92 @@
       </Border>
     </Grid>
 
-    <StackPanel Grid.Row="3"
-                Margin="0,12,0,0"
-                Orientation="Horizontal"
-                HorizontalAlignment="Left">
-      <Button x:Name="PreviewToggleButton"
-              MinWidth="84"
+    <Grid Grid.Row="3"
+          Margin="0,12,0,0">
+      <StackPanel Orientation="Horizontal"
+                  HorizontalAlignment="Left">
+        <Button x:Name="PreviewToggleButton"
+                MinWidth="84"
+                Height="28"
+                Padding="10,0"
+                Content="隐藏 OCR"
+                Click="PreviewToggleButton_Click" />
+        <Button x:Name="FloatingToggleButton"
+                Margin="10,0,0,0"
+                MinWidth="84"
+                Height="28"
+                Padding="10,0"
+                Content="悬浮窗"
+                Click="FloatingToggleButton_Click" />
+      </StackPanel>
+
+      <Button HorizontalAlignment="Right"
+              MinWidth="0"
               Height="28"
-              Padding="10,0"
-              Content="隐藏 OCR"
-              Click="PreviewToggleButton_Click" />
-      <Button x:Name="FloatingToggleButton"
-              Margin="10,0,0,0"
-              MinWidth="84"
-              Height="28"
-              Padding="10,0"
-              Content="悬浮窗"
-              Click="FloatingToggleButton_Click" />
-    </StackPanel>
+              Padding="0"
+              Background="Transparent"
+              Foreground="{StaticResource AccentBrush}"
+              Content="企业智能体搭建"
+              Click="AgentCardButton_Click" />
+    </Grid>
+
+    <Grid x:Name="AgentCardOverlay"
+          Grid.RowSpan="4"
+          Panel.ZIndex="10"
+          Visibility="Collapsed"
+          Background="#66000000">
+      <Border Width="380"
+              Padding="22"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Background="White"
+              BorderBrush="#D1D5DB"
+              BorderThickness="1"
+              CornerRadius="8">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <Button Grid.Row="0"
+                  Width="28"
+                  Height="28"
+                  MinWidth="28"
+                  Padding="0"
+                  HorizontalAlignment="Right"
+                  Background="#F3F4F6"
+                  Foreground="#374151"
+                  Content="↓"
+                  Click="CloseAgentCardButton_Click" />
+
+          <Image Grid.Row="1"
+                 Width="240"
+                 Height="240"
+                 Margin="0,8,0,18"
+                 HorizontalAlignment="Center"
+                 Source="Resources/Images/agent-qr.jpg"
+                 Stretch="Uniform" />
+
+          <StackPanel Grid.Row="2">
+            <TextBlock Text="软件专家 · 算法专家 · 流程顾问"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="#111827" />
+            <TextBlock Text="为企业定制内部智能体、自动化工作流与效率优化方案"
+                       Margin="0,8,0,0"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       FontSize="14"
+                       Foreground="#374151" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
 
   </Grid>
 </Window>
