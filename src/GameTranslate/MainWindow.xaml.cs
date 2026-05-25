@@ -9,6 +9,7 @@ public partial class MainWindow : Window
 {
     private const double FallbackPreviewPanelHeight = 136;
     private const double FallbackTranslationPanelHeight = 170;
+    private const double StartupScreenMargin = 16;
 
     private SelectionOverlayWindow? _selectionOverlay;
     private FloatingTranslationWindow? _floatingTranslationWindow;
@@ -16,7 +17,6 @@ public partial class MainWindow : Window
     private bool _isPreviewVisible = true;
     private double _previewPanelHeightDelta;
     private double _translationPanelHeightDelta;
-    private bool _isClosing;
 
     public MainWindow()
     {
@@ -24,6 +24,7 @@ public partial class MainWindow : Window
         var viewModel = new MainViewModel();
         DataContext = viewModel;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        Loaded += MainWindow_Loaded;
 
         _hotKeyMonitor = new SafeHotKeyMonitor(() => Dispatcher.Invoke(() =>
         {
@@ -33,6 +34,13 @@ public partial class MainWindow : Window
             }
         }));
         _hotKeyMonitor.StartMonitoring();
+    }
+
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        var workArea = SystemParameters.WorkArea;
+        Left = Math.Max(workArea.Left, workArea.Right - ActualWidth - StartupScreenMargin);
+        Top = workArea.Top + StartupScreenMargin;
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -175,7 +183,6 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        _isClosing = true;
         CloseFloatingTranslationWindow(restoreTranslationPanel: false);
         _selectionOverlay?.Close();
         _selectionOverlay = null;
@@ -197,20 +204,11 @@ public partial class MainWindow : Window
             disposable.Dispose();
         }
 
-        _isClosing = true;
-
         base.OnClosing(e);
     }
 
-    private async void SelectionOverlay_Closed(object? sender, EventArgs e)
+    private void SelectionOverlay_Closed(object? sender, EventArgs e)
     {
-        if (!_isClosing)
-        {
-            _selectionOverlay = null;
-            if (DataContext is MainViewModel viewModel)
-            {
-                await viewModel.ClearCaptureSelectionAsync();
-            }
-        }
+        _selectionOverlay = null;
     }
 }
