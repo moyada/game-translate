@@ -129,7 +129,8 @@
               BorderThickness="1"
               CornerRadius="6"
               Padding="12,10">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer x:Name="TranslationResultScrollViewer"
+                      VerticalScrollBarVisibility="Auto">
           <TextBlock Text="{Binding TranslatedText}"
                      TextWrapping="Wrap"
                      Foreground="#111827"

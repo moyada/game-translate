@@ -15,7 +15,7 @@
             Height="180"
             BorderBrush="#2563EB"
             BorderThickness="2"
-            Background="Transparent"
+            Background="#01000000"
             Canvas.Left="240"
             Canvas.Top="360"
             MouseLeftButtonDown="SelectionBorder_MouseLeftButtonDown"

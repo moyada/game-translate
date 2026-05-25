@@ -1,4 +1,5 @@
 using System.Windows;
+using System.ComponentModel;
 using GameTranslate.Services;
 using GameTranslate.ViewModels;
 
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         var viewModel = new MainViewModel();
         DataContext = viewModel;
+        viewModel.PropertyChanged += ViewModel_PropertyChanged;
 
         _hotKeyMonitor = new SafeHotKeyMonitor(() => Dispatcher.Invoke(() =>
         {
@@ -31,6 +33,14 @@ public partial class MainWindow : Window
             }
         }));
         _hotKeyMonitor.StartMonitoring();
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.TranslatedText))
+        {
+            Dispatcher.BeginInvoke(() => TranslationResultScrollViewer.ScrollToEnd());
+        }
     }
 
     private void SelectRegion_Click(object sender, RoutedEventArgs e)
@@ -179,6 +189,11 @@ public partial class MainWindow : Window
 
         if (DataContext is IDisposable disposable)
         {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            }
+
             disposable.Dispose();
         }
 
