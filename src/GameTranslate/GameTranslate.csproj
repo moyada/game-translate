@@ -10,6 +10,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <PublishSingleFile>false</PublishSingleFile>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationIcon>Resources\Icons\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
@@ -27,6 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icons\logo.ico" />
+    <Resource Include="Resources\Icons\logo.ico" />
     <None Include="Models\*.gguf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="Resources\Glossary\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
