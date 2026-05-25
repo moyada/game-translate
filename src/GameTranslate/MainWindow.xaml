@@ -5,7 +5,7 @@
         Width="560"
         Height="560"
         MinWidth="460"
-        MinHeight="300"
+        MinHeight="160"
         Background="#F7F8FA"
         FontFamily="Microsoft YaHei UI"
         FontSize="14">
