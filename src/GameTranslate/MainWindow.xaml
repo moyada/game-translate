@@ -362,17 +362,32 @@
               ClipToBounds="True"
               MouseLeftButtonDown="RegionSelectionViewport_MouseLeftButtonDown"
               MouseMove="RegionSelectionViewport_MouseMove"
-              MouseLeftButtonUp="RegionSelectionViewport_MouseLeftButtonUp">
-          <Image x:Name="RegionSelectionImage"
-                 Stretch="Uniform"
-                 RenderOptions.BitmapScalingMode="HighQuality" />
-          <Canvas IsHitTestVisible="False">
-            <Rectangle x:Name="RegionSelectionRectangle"
-                       Visibility="Collapsed"
-                       Stroke="#2563EB"
-                       StrokeThickness="2"
-                       Fill="Transparent" />
-          </Canvas>
+              MouseLeftButtonUp="RegionSelectionViewport_MouseLeftButtonUp"
+              MouseWheel="RegionSelectionViewport_MouseWheel">
+          <Grid x:Name="RegionSelectionContent"
+                RenderTransformOrigin="0,0">
+            <Grid.RenderTransform>
+              <TransformGroup>
+                <ScaleTransform x:Name="RegionSelectionScaleTransform"
+                                ScaleX="1"
+                                ScaleY="1" />
+                <TranslateTransform x:Name="RegionSelectionTranslateTransform"
+                                    X="0"
+                                    Y="0" />
+              </TransformGroup>
+            </Grid.RenderTransform>
+
+            <Image x:Name="RegionSelectionImage"
+                   Stretch="Uniform"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
+            <Canvas IsHitTestVisible="False">
+              <Rectangle x:Name="RegionSelectionRectangle"
+                         Visibility="Collapsed"
+                         Stroke="#2563EB"
+                         StrokeThickness="2"
+                         Fill="Transparent" />
+            </Canvas>
+          </Grid>
         </Grid>
       </Border>
     </Grid>

@@ -9,6 +9,7 @@ using Forms = System.Windows.Forms;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
 using WpfMouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
 using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
+using WpfMouseWheelEventArgs = System.Windows.Input.MouseWheelEventArgs;
 using WpfPoint = System.Windows.Point;
 
 namespace GameTranslate;
@@ -25,9 +26,10 @@ public partial class MainWindow : Window
     private bool _isSelectingRegion;
     private double _previewPanelHeightDelta = FallbackPreviewPanelHeight;
     private double _heightBeforeAgentCard;
+    private PreviewTransformState _selectionPreviewTransform = new(1, 0, 0);
     private CapturedFrame? _selectionPreviewFrame;
     private CaptureRegion _selectionScreenRegion;
-    private WpfPoint? _selectionDragStart;
+    private PreviewContentPoint? _selectionDragStart;
 
     public MainWindow()
     {
@@ -200,6 +202,7 @@ public partial class MainWindow : Window
         _selectionPreviewFrame = frame;
         RegionSelectionImage.Source = frame.Preview;
         RegionSelectionRectangle.Visibility = Visibility.Collapsed;
+        ResetRegionSelectionZoom();
         RegionSelectionPanel.Visibility = Visibility.Visible;
         _isSelectingRegion = true;
     }
@@ -217,7 +220,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _selectionDragStart = e.GetPosition(RegionSelectionViewport);
+        _selectionDragStart = ToRegionSelectionContentPoint(e.GetPosition(RegionSelectionViewport));
         RegionSelectionViewport.CaptureMouse();
         UpdateRegionSelectionRectangle(_selectionDragStart.Value);
     }
@@ -229,7 +232,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        UpdateRegionSelectionRectangle(e.GetPosition(RegionSelectionViewport));
+        UpdateRegionSelectionRectangle(ToRegionSelectionContentPoint(e.GetPosition(RegionSelectionViewport)));
     }
 
     private void RegionSelectionViewport_MouseLeftButtonUp(object sender, WpfMouseButtonEventArgs e)
@@ -239,7 +242,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var current = e.GetPosition(RegionSelectionViewport);
+        var current = ToRegionSelectionContentPoint(e.GetPosition(RegionSelectionViewport));
         var dragRegion = CaptureRegion.Normalize(
             _selectionDragStart.Value.X,
             _selectionDragStart.Value.Y,
@@ -253,8 +256,8 @@ public partial class MainWindow : Window
             _selectionScreenRegion,
             _selectionPreviewFrame.Width,
             _selectionPreviewFrame.Height,
-            RegionSelectionViewport.ActualWidth,
-            RegionSelectionViewport.ActualHeight,
+            RegionSelectionContent.ActualWidth,
+            RegionSelectionContent.ActualHeight,
             dragRegion);
 
         if (selection.IsEmpty)
@@ -271,7 +274,36 @@ public partial class MainWindow : Window
         ExitRegionSelectionMode(clearImage: true);
     }
 
-    private void UpdateRegionSelectionRectangle(WpfPoint current)
+    private void RegionSelectionViewport_MouseWheel(object sender, WpfMouseWheelEventArgs e)
+    {
+        if (!_isSelectingRegion)
+        {
+            return;
+        }
+
+        var anchor = e.GetPosition(RegionSelectionViewport);
+        _selectionPreviewTransform = PreviewSelectionTransform.ZoomAround(
+            anchor.X,
+            anchor.Y,
+            _selectionPreviewTransform.Zoom,
+            _selectionPreviewTransform.PanX,
+            _selectionPreviewTransform.PanY,
+            e.Delta);
+        ApplyRegionSelectionTransform();
+        e.Handled = true;
+    }
+
+    private PreviewContentPoint ToRegionSelectionContentPoint(WpfPoint viewportPoint)
+    {
+        return PreviewSelectionTransform.ToContentPoint(
+            viewportPoint.X,
+            viewportPoint.Y,
+            _selectionPreviewTransform.Zoom,
+            _selectionPreviewTransform.PanX,
+            _selectionPreviewTransform.PanY);
+    }
+
+    private void UpdateRegionSelectionRectangle(PreviewContentPoint current)
     {
         if (_selectionDragStart is null)
         {
@@ -283,13 +315,27 @@ public partial class MainWindow : Window
             _selectionDragStart.Value.Y,
             current.X - _selectionDragStart.Value.X,
             current.Y - _selectionDragStart.Value.Y)
-            .Clamp(0, 0, RegionSelectionViewport.ActualWidth, RegionSelectionViewport.ActualHeight);
+            .Clamp(0, 0, RegionSelectionContent.ActualWidth, RegionSelectionContent.ActualHeight);
 
         Canvas.SetLeft(RegionSelectionRectangle, region.X);
         Canvas.SetTop(RegionSelectionRectangle, region.Y);
         RegionSelectionRectangle.Width = region.Width;
         RegionSelectionRectangle.Height = region.Height;
         RegionSelectionRectangle.Visibility = region.IsEmpty ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ResetRegionSelectionZoom()
+    {
+        _selectionPreviewTransform = new PreviewTransformState(1, 0, 0);
+        ApplyRegionSelectionTransform();
+    }
+
+    private void ApplyRegionSelectionTransform()
+    {
+        RegionSelectionScaleTransform.ScaleX = _selectionPreviewTransform.Zoom;
+        RegionSelectionScaleTransform.ScaleY = _selectionPreviewTransform.Zoom;
+        RegionSelectionTranslateTransform.X = _selectionPreviewTransform.PanX;
+        RegionSelectionTranslateTransform.Y = _selectionPreviewTransform.PanY;
     }
 
     private void ExitRegionSelectionMode(bool clearImage)
@@ -302,6 +348,7 @@ public partial class MainWindow : Window
 
         if (clearImage)
         {
+            ResetRegionSelectionZoom();
             RegionSelectionImage.Source = null;
             _selectionPreviewFrame = null;
             _selectionScreenRegion = default;

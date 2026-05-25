@@ -15,6 +15,8 @@ var tests = new List<(string Name, Action Test)>
     ("capture selection display includes scale", CaptureSelectionDisplayIncludesScale),
     ("preview selection maps letterboxed drag to screen pixels", PreviewSelectionMapsLetterboxedDragToScreenPixels),
     ("preview selection clamps drag to displayed image", PreviewSelectionClampsDragToDisplayedImage),
+    ("preview selection transform maps zoomed points", PreviewSelectionTransformMapsZoomedPoints),
+    ("preview selection mouse wheel zoom policy", PreviewSelectionMouseWheelZoomPolicy),
     ("monitoring start requires selection", MonitoringStartRequiresSelection),
     ("translate requires selection", TranslateRequiresSelection),
     ("translate command refreshes on selection", TranslateCommandRefreshesOnSelection),
@@ -176,6 +178,38 @@ static void PreviewSelectionClampsDragToDisplayedImage()
         dragRegion: new CaptureRegion(-20, 10, 140, 80));
 
     Assert(selection.PixelRegion.ToDisplayText() == "X=0, Y=0, W=480, H=260", selection.PixelRegion.ToDisplayText());
+}
+
+static void PreviewSelectionTransformMapsZoomedPoints()
+{
+    var contentPoint = PreviewSelectionTransform.ToContentPoint(
+        viewportX: 300,
+        viewportY: 150,
+        zoom: 2,
+        panX: -100,
+        panY: -50);
+
+    Assert(contentPoint.X == 200, contentPoint.X.ToString("0.###"));
+    Assert(contentPoint.Y == 100, contentPoint.Y.ToString("0.###"));
+
+    var zoomed = PreviewSelectionTransform.ZoomAround(
+        anchorX: 250,
+        anchorY: 150,
+        currentZoom: 1,
+        currentPanX: 0,
+        currentPanY: 0,
+        wheelDelta: 120);
+
+    var stablePoint = PreviewSelectionTransform.ToContentPoint(250, 150, zoomed.Zoom, zoomed.PanX, zoomed.PanY);
+    Assert(Math.Abs(stablePoint.X - 250) < 0.001, stablePoint.X.ToString("0.###"));
+    Assert(Math.Abs(stablePoint.Y - 150) < 0.001, stablePoint.Y.ToString("0.###"));
+}
+
+static void PreviewSelectionMouseWheelZoomPolicy()
+{
+    Assert(MainWindowSelectionMode.SupportsMouseWheelZoom, "region selection preview should support mouse wheel zoom");
+    Assert(MainWindowSelectionMode.MinimumPreviewZoom == 1.0, MainWindowSelectionMode.MinimumPreviewZoom.ToString("0.###"));
+    Assert(MainWindowSelectionMode.MaximumPreviewZoom == 4.0, MainWindowSelectionMode.MaximumPreviewZoom.ToString("0.###"));
 }
 
 static void MonitoringStartRequiresSelection()
