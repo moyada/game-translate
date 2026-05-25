@@ -155,7 +155,7 @@
           <RowDefinition Height="92" />
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0"
-                   Text="OCR 截图"
+                   Text="截图"
                    FontWeight="SemiBold"
                    Margin="0,0,0,8" />
         <Border Grid.Row="1"
@@ -235,7 +235,7 @@
                 MinWidth="84"
                 Height="28"
                 Padding="10,0"
-                Content="隐藏 OCR"
+                Content="隐藏识别"
                 Click="PreviewToggleButton_Click" />
         <Button x:Name="FloatingToggleButton"
                 Margin="10,0,0,0"

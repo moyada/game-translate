@@ -82,14 +82,14 @@ public partial class MainWindow : Window
         {
             _previewPanelHeightDelta = GetPreviewPanelHeightDelta();
             PreviewPanel.Visibility = Visibility.Collapsed;
-            PreviewToggleButton.Content = "显示 OCR";
+            PreviewToggleButton.Content = "显示识别";
             Height = Math.Max(MinHeight, ActualHeight - _previewPanelHeightDelta);
             _isPreviewVisible = false;
             return;
         }
 
         PreviewPanel.Visibility = Visibility.Visible;
-        PreviewToggleButton.Content = "隐藏 OCR";
+        PreviewToggleButton.Content = "隐藏识别";
         Height = ActualHeight + (_previewPanelHeightDelta > 0 ? _previewPanelHeightDelta : FallbackPreviewPanelHeight);
         _isPreviewVisible = true;
     }
