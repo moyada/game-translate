@@ -19,15 +19,16 @@
           BorderBrush="#66FFFFFF"
           BorderThickness="1"
           CornerRadius="8"
-          Padding="14,12">
+          Padding="16,14">
     <ScrollViewer x:Name="FloatingResultScrollViewer"
                   VerticalScrollBarVisibility="Auto">
       <TextBlock Text="{Binding TranslatedText}"
                  TextWrapping="Wrap"
                  Foreground="#F9FAFB"
-                 FontSize="16"
-                 FontWeight="SemiBold"
-                 LineHeight="24"
+                 FontFamily="Microsoft YaHei UI"
+                 FontSize="15"
+                 FontWeight="Medium"
+                 LineHeight="28"
                  LineStackingStrategy="BlockLineHeight"
                  TextOptions.TextFormattingMode="Display" />
     </ScrollViewer>

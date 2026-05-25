@@ -248,7 +248,7 @@
               BorderBrush="#D1D5DB"
               BorderThickness="1"
               CornerRadius="6"
-              Padding="12,10">
+              Padding="16,14">
         <ScrollViewer x:Name="TranslationResultScrollViewer"
                       VerticalScrollBarVisibility="Auto">
           <TextBlock Text="{Binding TranslatedText}"
@@ -256,8 +256,8 @@
                      Foreground="#111827"
                      FontFamily="Microsoft YaHei UI"
                      FontSize="15"
-                     FontWeight="SemiBold"
-                     LineHeight="26"
+                     FontWeight="Medium"
+                     LineHeight="28"
                      LineStackingStrategy="BlockLineHeight"
                      TextOptions.TextFormattingMode="Display" />
         </ScrollViewer>
