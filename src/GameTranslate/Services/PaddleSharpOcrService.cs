@@ -3,7 +3,6 @@ using GameTranslate.Models;
 using OpenCvSharp;
 using Sdcb.PaddleInference;
 using Sdcb.PaddleOCR;
-using Sdcb.PaddleOCR.Models;
 using Sdcb.PaddleOCR.Models.Local;
 
 namespace GameTranslate.Services;
@@ -12,7 +11,7 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 {
     public const string PreviewLabel = "PaddleOCR 输入预览";
 
-    public const string RecognitionModelName = "en_PP-OCRv5_mobile_rec";
+    public const string RecognitionModelName = "PP-OCRv5_mobile_rec";
 
     public const bool UsesImagePreprocessing = false;
 
@@ -73,7 +72,7 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
 
     private static PaddleOcrAll CreateOcr()
     {
-        return new PaddleOcrAll(CreateEnglishV5Model(), PaddleDevice.Mkldnn())
+        return new PaddleOcrAll(LocalFullModels.ChineseV5, PaddleDevice.Mkldnn())
         {
             AllowRotateDetection = false,
             Enable180Classification = false
@@ -116,13 +115,6 @@ public sealed class PaddleSharpOcrService : IOcrService, IDisposable
             _ocr?.Dispose();
             _ocr = null;
         }
-    }
-
-    private static FullOcrModel CreateEnglishV5Model()
-    {
-        return new FullOcrModel(
-            LocalDetectionModel.ChineseV5,
-            new LocalRecognizationModel(RecognitionModelName, string.Empty, ModelVersion.V5));
     }
 
     private static Mat CreateBgrMat(CapturedFrame frame)

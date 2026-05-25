@@ -28,7 +28,7 @@ var tests = new List<(string Name, Action Test)>
     ("image change detector three percent threshold", ImageChangeDetectorThreePercentThreshold),
     ("monitoring force translation policy", MonitoringForceTranslationPolicy),
     ("paddle ocr preview label", PaddleOcrPreviewLabel),
-    ("paddle ocr uses english v5 recognition", PaddleOcrUsesEnglishV5Recognition),
+    ("paddle ocr uses embedded v5 recognition", PaddleOcrUsesEmbeddedV5Recognition),
     ("paddle ocr disables image preprocessing", PaddleOcrDisablesImagePreprocessing),
     ("paddle ocr recreates engine after failure", PaddleOcrRecreatesEngineAfterFailure),
     ("paddle ocr recreates engine after recognition", PaddleOcrRecreatesEngineAfterRecognition),
@@ -361,9 +361,9 @@ static void PaddleOcrPreviewLabel()
     Assert(PaddleSharpOcrService.PreviewLabel == "PaddleOCR 输入预览", PaddleSharpOcrService.PreviewLabel);
 }
 
-static void PaddleOcrUsesEnglishV5Recognition()
+static void PaddleOcrUsesEmbeddedV5Recognition()
 {
-    Assert(PaddleSharpOcrService.RecognitionModelName == "en_PP-OCRv5_mobile_rec", PaddleSharpOcrService.RecognitionModelName);
+    Assert(PaddleSharpOcrService.RecognitionModelName == "PP-OCRv5_mobile_rec", PaddleSharpOcrService.RecognitionModelName);
 }
 
 static void PaddleOcrDisablesImagePreprocessing()
