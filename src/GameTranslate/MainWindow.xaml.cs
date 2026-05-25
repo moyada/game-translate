@@ -196,6 +196,21 @@ public partial class MainWindow : Window
 
     private void CloseAgentCardButton_Click(object sender, RoutedEventArgs e)
     {
+        CloseAgentCard();
+    }
+
+    private void AgentCardOverlay_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        CloseAgentCard();
+    }
+
+    private void AgentCardSurface_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    private void CloseAgentCard()
+    {
         AgentCardOverlay.Visibility = Visibility.Collapsed;
         if (_heightBeforeAgentCard > 0)
         {

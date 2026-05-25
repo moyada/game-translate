@@ -17,8 +17,90 @@
       <Setter Property="Padding" Value="14,0" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="Foreground" Value="White" />
       <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="ButtonChrome"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="4">
+              <ContentPresenter HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                Margin="{TemplateBinding Padding}"
+                                RecognizesAccessKey="True" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="#1D4ED8" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="#1E40AF" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="#9CA3AF" />
+                <Setter Property="Foreground" Value="#F9FAFB" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="LinkButtonStyle" TargetType="Button">
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <ContentPresenter HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Content="{TemplateBinding Content}"
+                              Margin="{TemplateBinding Padding}"
+                              RecognizesAccessKey="True" />
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="CloseButtonStyle" TargetType="Button">
+      <Setter Property="Width" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="MinWidth" Value="28" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="#F3F4F6" />
+      <Setter Property="Foreground" Value="#374151" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="CloseChrome"
+                    Background="{TemplateBinding Background}"
+                    CornerRadius="4">
+              <ContentPresenter HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding Content}"
+                                Margin="{TemplateBinding Padding}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="CloseChrome" Property="Background" Value="#E5E7EB" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="CloseChrome" Property="Background" Value="#D1D5DB" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
     <Style TargetType="TextBox">
       <Setter Property="BorderBrush" Value="#D1D5DB" />
@@ -165,12 +247,8 @@
       </StackPanel>
 
       <Button HorizontalAlignment="Right"
-              MinWidth="0"
-              Height="28"
-              Padding="0"
-              Background="Transparent"
-              Foreground="{StaticResource AccentBrush}"
-              Content="企业智能体搭建"
+              Style="{StaticResource LinkButtonStyle}"
+              Content="企业智能体落地"
               Click="AgentCardButton_Click" />
     </Grid>
 
@@ -178,7 +256,8 @@
           Grid.RowSpan="4"
           Panel.ZIndex="10"
           Visibility="Collapsed"
-          Background="#66000000">
+          Background="#66000000"
+          MouseLeftButtonDown="AgentCardOverlay_MouseLeftButtonDown">
       <Border Width="380"
               Padding="22"
               HorizontalAlignment="Center"
@@ -186,7 +265,8 @@
               Background="White"
               BorderBrush="#D1D5DB"
               BorderThickness="1"
-              CornerRadius="8">
+              CornerRadius="8"
+              MouseLeftButtonDown="AgentCardSurface_MouseLeftButtonDown">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -195,14 +275,9 @@
           </Grid.RowDefinitions>
 
           <Button Grid.Row="0"
-                  Width="28"
-                  Height="28"
-                  MinWidth="28"
-                  Padding="0"
                   HorizontalAlignment="Right"
-                  Background="#F3F4F6"
-                  Foreground="#374151"
-                  Content="↓"
+                  Style="{StaticResource CloseButtonStyle}"
+                  Content="X"
                   Click="CloseAgentCardButton_Click" />
 
           <Image Grid.Row="1"
@@ -220,7 +295,7 @@
                        FontSize="16"
                        FontWeight="SemiBold"
                        Foreground="#111827" />
-            <TextBlock Text="为企业定制内部智能体、自动化工作流与效率优化方案"
+            <TextBlock Text="定制内部智能体、自动化工作流与 SOP 提效方案"
                        Margin="0,8,0,0"
                        HorizontalAlignment="Center"
                        TextAlignment="Center"
