@@ -13,13 +13,13 @@
         ShowInTaskbar="False"
         Topmost="True"
         FontFamily="Microsoft YaHei UI"
-        FontSize="14">
+        FontSize="14"
+        PreviewMouseLeftButtonDown="Window_PreviewMouseLeftButtonDown">
   <Border Background="#B3000000"
           BorderBrush="#66FFFFFF"
           BorderThickness="1"
           CornerRadius="8"
-          Padding="14,12"
-          MouseLeftButtonDown="WindowSurface_MouseLeftButtonDown">
+          Padding="14,12">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <TextBlock Text="{Binding TranslatedText}"
                  TextWrapping="Wrap"
