@@ -11,6 +11,7 @@ public static class NativeDependencyDiagnostics
         "ggml-base.dll",
         "ggml-cpu.dll",
         "ggml-cuda.dll",
+        "ggml-vulkan.dll",
         "ggml-rpc.dll",
         "cudart64_12.dll",
         "cublas64_12.dll",

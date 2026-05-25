@@ -12,8 +12,11 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
     private LLamaWeights? _weights;
     private ModelParams? _modelParams;
     private TranslationOptions? _options;
+    private LlamaBackendSelection? _backend;
 
     public bool IsLoaded => _weights is not null && _modelParams is not null && _options is not null;
+
+    public string BackendDisplayName => _backend?.DisplayName ?? "GPU";
 
     public async Task LoadAsync(TranslationOptions options, CancellationToken cancellationToken = default)
     {
@@ -37,9 +40,11 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
         {
             DisposeModel();
 
-            var cudaLlamaPath = CudaNativeLibraryResolver.GetCudaLlamaLibraryPath(AppContext.BaseDirectory);
+            _backend = LlamaBackendResolver.Resolve(
+                AppContext.BaseDirectory,
+                WindowsGpuDetector.HasNvidiaGpu());
             NativeLibraryConfig.All
-                .WithLibrary(cudaLlamaPath, string.Empty);
+                .WithLibrary(_backend.LibraryPath, string.Empty);
 
             _modelParams = new ModelParams(options.ModelPath)
             {
@@ -65,7 +70,7 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
 
         if (!IsLoaded)
         {
-            throw new InvalidOperationException("CUDA 模型尚未加载。");
+            throw new InvalidOperationException("GPU 模型尚未加载。");
         }
 
         await _gate.WaitAsync(cancellationToken);
@@ -112,6 +117,7 @@ public sealed class CudaLlamaTranslationService : ITranslationService, IDisposab
         _weights = null;
         _modelParams = null;
         _options = null;
+        _backend = null;
     }
 
     public void Dispose()

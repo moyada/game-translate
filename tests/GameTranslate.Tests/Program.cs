@@ -36,7 +36,9 @@ var tests = new List<(string Name, Action Test)>
     ("selection overlay behavior", SelectionOverlayBehaviorFlags),
     ("ocr text normalizer", OcrTextNormalizerTrimsAndDropsBlankLines),
     ("exception formatter includes inner exception", ExceptionFormatterIncludesInnerException),
-    ("cuda native library resolver missing file", CudaNativeLibraryResolverMissingFile),
+    ("llama backend prefers cuda for nvidia", LlamaBackendPrefersCudaForNvidia),
+    ("llama backend falls back to vulkan without nvidia", LlamaBackendFallsBackToVulkanWithoutNvidia),
+    ("llama backend reports missing vulkan for non nvidia", LlamaBackendReportsMissingVulkanForNonNvidia),
     ("translation options", TranslationOptionsDefaults),
     ("qwen chat prompt content", QwenChatPromptContent),
     ("simple translation prompt", SimpleTranslationPrompt),
@@ -419,19 +421,66 @@ static void ExceptionFormatterIncludesInnerException()
     Assert(text.Contains("File: llama.dll", StringComparison.Ordinal), text);
 }
 
-static void CudaNativeLibraryResolverMissingFile()
+static void LlamaBackendPrefersCudaForNvidia()
+{
+    var baseDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+    try
+    {
+        var cudaPath = Path.Combine(baseDirectory, "runtimes", "win-x64", "native", "cuda12", "llama.dll");
+        var vulkanPath = Path.Combine(baseDirectory, "runtimes", "win-x64", "native", "vulkan", "llama.dll");
+        Directory.CreateDirectory(Path.GetDirectoryName(cudaPath)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(vulkanPath)!);
+        File.WriteAllText(cudaPath, string.Empty);
+        File.WriteAllText(vulkanPath, string.Empty);
+
+        var backend = LlamaBackendResolver.Resolve(baseDirectory, hasNvidiaGpu: true);
+        Assert(backend.Kind == LlamaBackendKind.Cuda12, backend.Kind.ToString());
+        Assert(backend.LibraryPath == cudaPath, backend.LibraryPath);
+    }
+    finally
+    {
+        if (Directory.Exists(baseDirectory))
+        {
+            Directory.Delete(baseDirectory, recursive: true);
+        }
+    }
+}
+
+static void LlamaBackendFallsBackToVulkanWithoutNvidia()
+{
+    var baseDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+    try
+    {
+        var vulkanPath = Path.Combine(baseDirectory, "runtimes", "win-x64", "native", "vulkan", "llama.dll");
+        Directory.CreateDirectory(Path.GetDirectoryName(vulkanPath)!);
+        File.WriteAllText(vulkanPath, string.Empty);
+
+        var backend = LlamaBackendResolver.Resolve(baseDirectory, hasNvidiaGpu: false);
+        Assert(backend.Kind == LlamaBackendKind.Vulkan, backend.Kind.ToString());
+        Assert(backend.LibraryPath == vulkanPath, backend.LibraryPath);
+    }
+    finally
+    {
+        if (Directory.Exists(baseDirectory))
+        {
+            Directory.Delete(baseDirectory, recursive: true);
+        }
+    }
+}
+
+static void LlamaBackendReportsMissingVulkanForNonNvidia()
 {
     var baseDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
     try
     {
         try
         {
-            _ = CudaNativeLibraryResolver.GetCudaLlamaLibraryPath(baseDirectory);
+            _ = LlamaBackendResolver.Resolve(baseDirectory, hasNvidiaGpu: false);
             throw new InvalidOperationException("resolver should throw");
         }
         catch (FileNotFoundException ex)
         {
-            Assert(ex.FileName?.EndsWith(Path.Combine("runtimes", "win-x64", "native", "cuda12", "llama.dll"), StringComparison.Ordinal) == true, ex.FileName ?? "missing filename");
+            Assert(ex.FileName?.EndsWith(Path.Combine("runtimes", "win-x64", "native", "vulkan", "llama.dll"), StringComparison.Ordinal) == true, ex.FileName ?? "missing filename");
         }
     }
     finally

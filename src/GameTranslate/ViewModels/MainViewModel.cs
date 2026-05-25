@@ -222,7 +222,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         LatestCaptureImage = null;
         LatestOcrImage = null;
         CaptureStatusText = "未选择截图区域";
-        StatusText = _isModelLoaded ? "CUDA 模型已加载" : "模型将在首次翻译时加载";
+        StatusText = _isModelLoaded ? "GPU 模型已加载" : "模型将在首次翻译时加载";
     }
 
     private async Task<bool> EnsureModelLoadedAsync()
@@ -234,10 +234,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            StatusText = "首次翻译，正在加载 CUDA 模型...";
+            StatusText = "首次翻译，正在加载 GPU 模型...";
             await _translationService.LoadAsync(TranslationOptions.CreateDefault(_modelPath));
             _isModelLoaded = true;
-            StatusText = "CUDA 模型已加载";
+            StatusText = _translationService is CudaLlamaTranslationService llamaService
+                ? $"{llamaService.BackendDisplayName} 模型已加载"
+                : "GPU 模型已加载";
             return true;
         }
         catch (Exception ex)
