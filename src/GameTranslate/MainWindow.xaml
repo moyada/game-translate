@@ -263,9 +263,7 @@
                  Foreground="#111827"
                  FontFamily="Microsoft YaHei UI"
                  FontSize="15"
-                 FontWeight="Medium"
-                 LineHeight="28"
-                 LineStackingStrategy="BlockLineHeight" />
+                 FontWeight="Medium" />
       </Border>
     </Grid>
 
