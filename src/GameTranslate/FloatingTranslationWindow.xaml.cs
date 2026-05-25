@@ -1,8 +1,8 @@
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
 
 namespace GameTranslate;
 
@@ -33,7 +33,7 @@ public partial class FloatingTranslationWindow : Window
     {
         while (source is not null)
         {
-            if (source is ScrollBar or Thumb)
+            if (source is WpfScrollBar or Thumb)
             {
                 return true;
             }
