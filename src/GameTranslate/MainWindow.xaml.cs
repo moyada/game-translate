@@ -49,7 +49,7 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(MainViewModel.TranslatedText))
         {
-            Dispatcher.BeginInvoke(() => TranslationResultScrollViewer.ScrollToEnd());
+            Dispatcher.BeginInvoke(() => TranslationResultTextBox.ScrollToEnd());
         }
     }
 
