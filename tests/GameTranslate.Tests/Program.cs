@@ -499,8 +499,11 @@ static void QwenChatPromptContent()
     Assert(prompt.Contains("<|im_start|>user", StringComparison.Ordinal), "missing user header");
     Assert(prompt.Contains("<|im_start|>assistant", StringComparison.Ordinal), "missing assistant header");
     Assert(prompt.Contains("/no_think", StringComparison.Ordinal), "missing /no_think");
-    Assert(prompt.Contains("Only output the Chinese translation.", StringComparison.Ordinal), "missing output rule");
-    Assert(prompt.Contains("same number of translated lines", StringComparison.Ordinal), "missing multi-line output rule");
+    Assert(prompt.Contains("只输出翻译后的结果，不要解释，不要添加注释，不要输出任何额外内容。", StringComparison.Ordinal), "missing output rule");
+    Assert(prompt.Contains("{user} : {message}", StringComparison.Ordinal), "missing spaced speaker prefix rule");
+    Assert(prompt.Contains("{user}: {message}", StringComparison.Ordinal), "missing compact speaker prefix rule");
+    Assert(prompt.Contains("{user}：{message}", StringComparison.Ordinal), "missing chinese colon speaker prefix rule");
+    Assert(prompt.Contains("如果一行开头看起来像用户名，但没有明确的 : 或 ： 分隔符，不要把它当作用户名，不要擅自添加冒号。", StringComparison.Ordinal), "missing separator guard");
     Assert(prompt.Contains("push mid now", StringComparison.Ordinal), "missing source text");
     Assert(prompt.TrimEnd().EndsWith("<|im_start|>assistant", StringComparison.Ordinal), "prompt should end at assistant turn");
 }
@@ -509,7 +512,7 @@ static void SimpleTranslationPrompt()
 {
     var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt("Hello.");
     Assert(prompt.Contains("Hello.", StringComparison.Ordinal), "missing simple sentence");
-    Assert(prompt.Contains("Do not repeat the English source.", StringComparison.Ordinal), "missing source repeat guard");
+    Assert(prompt.Contains("只翻译游戏聊天中的英文消息内容，输出中文译文。", StringComparison.Ordinal), "missing game chat translation goal");
     Assert(!prompt.Contains("Text:", StringComparison.Ordinal), "legacy prompt marker should not be used");
 }
 
@@ -612,8 +615,7 @@ static void MapleStoryColonSpeakerPrefixes()
 static void MapleStoryGlossaryPromptContent()
 {
     var prompt = TranslationPromptBuilder.BuildEnglishToChinesePrompt("go kill Slime near Henesys");
-    Assert(prompt.Contains("MapleStory", StringComparison.Ordinal), "missing MapleStory context");
-    Assert(prompt.Contains("冒险岛", StringComparison.Ordinal), "missing Chinese game context");
+    Assert(prompt.Contains("游戏术语参考", StringComparison.Ordinal), "missing glossary label");
     Assert(prompt.Contains("Slime => 绿水灵", StringComparison.Ordinal), "missing monster glossary");
     Assert(prompt.Contains("Henesys => 射手村", StringComparison.Ordinal), "missing map glossary");
 }

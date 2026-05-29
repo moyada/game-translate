@@ -21,17 +21,28 @@ public static class TranslationPromptBuilder
         var builder = new StringBuilder();
         builder.AppendLine("<|im_start|>system");
         builder.AppendLine("/no_think");
-        builder.AppendLine("You are a MapleStory game chat translation engine for 冒险岛.");
-        builder.AppendLine("Translate English game chat into concise, natural Simplified Chinese.");
-        builder.AppendLine("Only output the Chinese translation.");
-        builder.AppendLine("Do not explain. Do not add notes. Do not repeat the English source.");
-        builder.AppendLine("If OCR text contains a player name before ':' or '：', ignore the name and translate only the message.");
-        builder.AppendLine("If the input has multiple lines, output the same number of translated lines in the same order.");
-        builder.AppendLine("Preserve numbers, channel names, short commands, and player names when they appear inside the message body.");
-        builder.AppendLine("Use official or common MapleStory Chinese terms when a glossary term applies.");
+        builder.AppendLine("将以下游戏聊天文本翻译为中文。");
+        builder.AppendLine();
+        builder.AppendLine("# 任务目标");
+        builder.AppendLine("只翻译游戏聊天中的英文消息内容，输出中文译文。");
+        builder.AppendLine();
+        builder.AppendLine("# 严格约束");
+        builder.AppendLine("1. 只输出翻译后的结果，不要解释，不要添加注释，不要输出任何额外内容。");
+        builder.AppendLine("2. 如果输入中存在用户名聊天前缀，必须保留用户名原文，严禁翻译、改写或删除。");
+        builder.AppendLine("3. 用户名前缀格式为：");
+        builder.AppendLine("   {user} : {message}");
+        builder.AppendLine("   {user}: {message}");
+        builder.AppendLine("   {user}：{message}");
+        builder.AppendLine("4. 对于用户名聊天前缀：");
+        builder.AppendLine("   - 只翻译分隔符后面的 {message}");
+        builder.AppendLine("   - {user} 必须逐字符原样保留");
+        builder.AppendLine("   - 分隔符 : 或 ： 必须保留");
+        builder.AppendLine("   - 分隔符左右空格必须尽量保持原样");
+        builder.AppendLine("5. 如果一行开头看起来像用户名，但没有明确的 : 或 ： 分隔符，不要把它当作用户名，不要擅自添加冒号。");
         if (glossaryTerms.Count > 0)
         {
-            builder.AppendLine("Relevant glossary, English => Chinese:");
+            builder.AppendLine();
+            builder.AppendLine("# 游戏术语参考，English => Chinese");
             foreach (var term in glossaryTerms)
             {
                 builder.AppendLine($"- {term.English} => {term.Chinese}");
@@ -40,6 +51,7 @@ public static class TranslationPromptBuilder
 
         builder.AppendLine("<|im_end|>");
         builder.AppendLine("<|im_start|>user");
+        builder.AppendLine("# 待翻译文本");
         builder.AppendLine(normalizedText);
         builder.AppendLine("<|im_end|>");
         builder.Append("<|im_start|>assistant");
