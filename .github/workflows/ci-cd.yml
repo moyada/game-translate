@@ -1,0 +1,52 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: 8.0.x
+  PROJECT_PATH: src/GameTranslate/GameTranslate.csproj
+  TEST_PROJECT_PATH: tests/GameTranslate.Tests/GameTranslate.Tests.csproj
+  PUBLISH_DIR: artifacts/GameTranslate-win-x64
+
+jobs:
+  build-test-package:
+    name: Build, test, and package
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore GameTranslate.sln
+
+      - name: Build
+        run: dotnet build GameTranslate.sln -c Release -p:Platform=x64 --no-restore
+
+      - name: Run tests
+        run: dotnet run --project $env:TEST_PROJECT_PATH -c Release -p:Platform=x64 --no-build
+
+      - name: Publish win-x64 package
+        run: dotnet publish $env:PROJECT_PATH -c Release -r win-x64 --self-contained true -p:Platform=x64 -o $env:PUBLISH_DIR
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameTranslate-win-x64
+          path: ${{ env.PUBLISH_DIR }}
+          retention-days: 14

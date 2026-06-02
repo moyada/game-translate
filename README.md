@@ -1,5 +1,7 @@
 # Game Translate
 
+[![CI/CD](https://github.com/moyada/game-translate/actions/workflows/ci-cd.yml/badge.svg?branch=master)](https://github.com/moyada/game-translate/actions/workflows/ci-cd.yml)
+
 Windows 10 / Windows 11 x64 WPF app for translating selected game chat text with a local GGUF model.
 
 ## Current Decisions
@@ -67,6 +69,40 @@ Known target machine:
 dotnet restore
 dotnet build src/GameTranslate/GameTranslate.csproj -c Release -p:Platform=x64
 ```
+
+## CI/CD
+
+GitHub Actions workflow:
+
+```text
+.github/workflows/ci-cd.yml
+```
+
+The workflow runs on:
+
+- push to `master`
+- pull requests targeting `master`
+- manual runs from the GitHub Actions web page
+
+Pipeline steps:
+
+- restore `GameTranslate.sln`
+- build the solution in `Release` with `Platform=x64`
+- run `tests/GameTranslate.Tests`
+- publish a self-contained `win-x64` package
+- upload the published package as the `GameTranslate-win-x64` artifact
+
+GitHub web setup flow:
+
+1. Push this repository to GitHub with `.github/workflows/ci-cd.yml` on `master`.
+2. Open the repository page on GitHub.
+3. Click `Actions`.
+4. If GitHub asks to enable Actions for the repository, enable it.
+5. Select the `CI/CD` workflow in the left sidebar.
+6. To run it manually, click `Run workflow`, choose `master`, then confirm.
+7. After a run finishes, open the workflow run page and download `GameTranslate-win-x64` from `Artifacts`.
+
+No repository secrets are required for the current CI/CD workflow. It only builds, tests, publishes, and uploads a downloadable artifact; it does not create GitHub Releases automatically.
 
 ## Native CUDA Diagnostics
 
