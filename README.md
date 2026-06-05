@@ -28,34 +28,24 @@ Windows 10 / Windows 11 x64 WPF app for translating selected game chat text with
 
 ## Model File
 
-Download the `UD-Q4_K_XL` GGUF file from `unsloth/Qwen3-1.7B-GGUF`, then place it here:
+Download the `translategemma` GGUF file from `mradermacher/translategemma-4b-it-GGUF`, then place it here:
+
+download URL:
 
 ```text
-src/GameTranslate/Models/Qwen3-1.7B-UD-Q4_K_XL.gguf
-```
-
-Manual download URL:
-
-```text
-https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-UD-Q4_K_XL.gguf?download=true
+https://huggingface.co/mradermacher/translategemma-4b-it-GGUF/blob/main/translategemma-4b-it.Q4_K_M.gguf
 ```
 
 At runtime, the app chooses the first `*.gguf` file in the `Models` folder by file name. If no GGUF file exists, it falls back to this expected path:
-
-```text
-Models/Qwen3-1.7B-UD-Q4_K_XL.gguf
-```
 
 For an installed/published app, put the model in the app folder:
 
 ```text
 GameTranslate.exe
-Models/Qwen3-1.7B-UD-Q4_K_XL.gguf
+Models/translategemma-4b-it.Q4_K_M.gguf
 ```
 
-## Target Win11 Environment
-
-Known target machine:
+## Development Environment
 
 - GPU: RTX 4070 Ti Super 16GB
 - Driver: 595.79
